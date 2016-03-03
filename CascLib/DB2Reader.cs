@@ -6,7 +6,7 @@ using System.Text;
 
 namespace CASCExplorer
 {
-    class DB2Row
+    public class DB2Row
     {
         private byte[] m_data;
         private DB2Reader m_reader;
@@ -43,7 +43,7 @@ namespace CASCExplorer
         }
     }
 
-    class DB2Reader : IEnumerable<KeyValuePair<int, DB2Row>>
+    public class DB2Reader : IEnumerable<KeyValuePair<int, DB2Row>>
     {
         private const int HeaderSize = 48;
         private const uint DB2FmtSig = 0x32424457;          // WDB2

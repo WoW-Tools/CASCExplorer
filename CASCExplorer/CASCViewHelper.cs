@@ -19,6 +19,8 @@ namespace CASCExplorer
         private ExtractProgress extractProgress;
         private CASCHandler _casc;
         private CASCFolder _root;
+        private CASCFolder _currentFolder;
+        private List<ICASCEntry> _displayedEntries;
         private CASCEntrySorter Sorter = new CASCEntrySorter();
         private ScanForm scanForm;
         private NumberFormatInfo sizeNumberFmt = new NumberFormatInfo()
@@ -31,21 +33,17 @@ namespace CASCExplorer
         public event OnStorageChangedDelegate OnStorageChanged;
         public event OnCleanupDelegate OnCleanup;
 
-        public CASCHandler CASC
-        {
-            get { return _casc; }
-        }
+        public CASCHandler CASC => _casc;
 
-        public CASCFolder Root
-        {
-            get { return _root; }
-        }
+        public CASCFolder Root => _root;
+
+        public CASCFolder CurrentFolder => _currentFolder;
+
+        public List<ICASCEntry> DisplayedEntries => _displayedEntries;
 
         public void ExtractFiles(NoFlickerListView filesList)
         {
-            CASCFolder folder = filesList.Tag as CASCFolder;
-
-            if (folder == null)
+            if (_currentFolder == null)
                 return;
 
             if (!filesList.HasSelection)
@@ -54,7 +52,7 @@ namespace CASCExplorer
             if (extractProgress == null)
                 extractProgress = new ExtractProgress();
 
-            var files = folder.GetFiles(filesList.SelectedIndices.Cast<int>()).ToList();
+            var files = CASCFolder.GetFiles(_displayedEntries, filesList.SelectedIndices.Cast<int>()).ToList();
             extractProgress.SetExtractData(_casc, files);
             extractProgress.ShowDialog();
         }
@@ -76,7 +74,10 @@ namespace CASCExplorer
 
                 foreach (var file in installFiles)
                 {
-                    _casc.ExtractFile(_casc.Encoding.GetEntry(file.MD5).Key, "data\\" + build + "\\install_files", file.Name);
+                    EncodingEntry enc;
+
+                    if (_casc.Encoding.GetEntry(file.MD5, out enc))
+                        _casc.SaveFileTo(enc.Key, Path.Combine("data", build, "install_files"), file.Name);
 
                     progress.Report((int)(++numDone / (float)numFiles * 100.0f));
                 }
@@ -168,16 +169,18 @@ namespace CASCExplorer
                 if (unknownFolder == null)
                     return;
 
-                IEnumerable<CASCFile> files = unknownFolder.GetFiles(null, true);
+                IEnumerable<CASCFile> files = CASCFolder.GetFiles(unknownFolder.Entries.Select(kv => kv.Value), null, true);
                 int numTotal = files.Count();
                 int numDone = 0;
+
+                WowRootHandler wowRoot = _casc.Root as WowRootHandler;
 
                 foreach (var unknownEntry in files)
                 {
                     CASCFile unknownFile = unknownEntry as CASCFile;
 
                     string name;
-                    if (idToName.TryGetValue(_casc.Root.GetEntries(unknownFile.Hash).First().FileDataId, out name))
+                    if (idToName.TryGetValue(wowRoot.GetFileDataIdByHash(unknownFile.Hash), out name))
                         unknownFile.FullName = name;
                     else
                     {
@@ -220,13 +223,14 @@ namespace CASCExplorer
             Wildcard wildcard = new Wildcard(filter, false, RegexOptions.IgnoreCase);
 
             // Sort
-            baseEntry.Entries = baseEntry.EntriesMirror.Where(v => v.Value is CASCFolder || (v.Value is CASCFile && wildcard.IsMatch(v.Value.Name))).
-                OrderBy(v => v.Value, Sorter).ToDictionary(pair => pair.Key, pair => pair.Value);
+            _displayedEntries = baseEntry.Entries.Where(v => v.Value is CASCFolder || (v.Value is CASCFile && wildcard.IsMatch(v.Value.Name))).
+                OrderBy(v => v.Value, Sorter).Select(kv => kv.Value).ToList();
+
+            _currentFolder = baseEntry;
 
             // Update
-            fileList.Tag = baseEntry;
             fileList.VirtualListSize = 0;
-            fileList.VirtualListSize = baseEntry.Entries.Count;
+            fileList.VirtualListSize = _displayedEntries.Count;
 
             if (fileList.VirtualListSize > 0)
             {
@@ -332,15 +336,13 @@ namespace CASCExplorer
 
         public void GetSize(NoFlickerListView fileList)
         {
-            CASCFolder folder = fileList.Tag as CASCFolder;
-
-            if (folder == null)
+            if (_currentFolder == null)
                 return;
 
             if (!fileList.HasSelection)
                 return;
 
-            var files = folder.GetFiles(fileList.SelectedIndices.Cast<int>());
+            var files = CASCFolder.GetFiles(_displayedEntries, fileList.SelectedIndices.Cast<int>());
 
             long size = files.Sum(f => (long)f.GetSize(_casc));
 
@@ -349,15 +351,13 @@ namespace CASCExplorer
 
         public void PreviewFile(NoFlickerListView fileList)
         {
-            CASCFolder folder = fileList.Tag as CASCFolder;
-
-            if (folder == null)
+            if (_currentFolder == null)
                 return;
 
             if (!fileList.HasSingleSelection)
                 return;
 
-            var file = folder.Entries.ElementAt(fileList.SelectedIndex).Value as CASCFile;
+            var file = _displayedEntries[fileList.SelectedIndex] as CASCFile;
 
             var extension = Path.GetExtension(file.Name);
 
@@ -427,15 +427,15 @@ namespace CASCExplorer
             }
         }
 
-        public void CreateListViewItem(RetrieveVirtualItemEventArgs e, CASCFolder folder)
+        public void CreateListViewItem(RetrieveVirtualItemEventArgs e)
         {
-            if (folder == null)
+            if (_currentFolder == null)
                 return;
 
-            if (e.ItemIndex < 0 || e.ItemIndex >= folder.Entries.Count)
+            if (e.ItemIndex < 0 || e.ItemIndex >= _displayedEntries.Count)
                 return;
 
-            ICASCEntry entry = folder.Entries.ElementAt(e.ItemIndex).Value;
+            ICASCEntry entry = _displayedEntries[e.ItemIndex];
 
             var localeFlags = LocaleFlags.None;
             var contentFlags = ContentFlags.None;
@@ -447,19 +447,16 @@ namespace CASCExplorer
 
                 if (rootInfosLocale.Any())
                 {
-                    var enc = _casc.Encoding.GetEntry(rootInfosLocale.First().MD5);
+                    EncodingEntry enc;
 
-                    if (enc != null)
-                        size = enc.Size.ToString("N", sizeNumberFmt);
-                    else
-                        size = "0";
-
-                    foreach (var rootInfo in rootInfosLocale)
+                    if (_casc.Encoding.GetEntry(rootInfosLocale.First().MD5, out enc))
                     {
-                        if (rootInfo.Block != null)
+                        size = enc.Size.ToString("N", sizeNumberFmt) ?? "0";
+
+                        foreach (var rootInfo in rootInfosLocale)
                         {
-                            localeFlags |= rootInfo.Block.LocaleFlags;
-                            contentFlags |= rootInfo.Block.ContentFlags;
+                            localeFlags |= rootInfo.LocaleFlags;
+                            contentFlags |= rootInfo.ContentFlags;
                         }
                     }
                 }
@@ -469,21 +466,21 @@ namespace CASCExplorer
 
                     if (installInfos.Any())
                     {
-                        var enc = _casc.Encoding.GetEntry(installInfos.First().MD5);
+                        EncodingEntry enc;
 
-                        if (enc != null)
-                            size = enc.Size.ToString("N", sizeNumberFmt);
-                        else
-                            size = "0";
+                        if (_casc.Encoding.GetEntry(installInfos.First().MD5, out enc))
+                        {
+                            size = enc.Size.ToString("N", sizeNumberFmt) ?? "0";
 
-                        //foreach (var rootInfo in rootInfosLocale)
-                        //{
-                        //    if (rootInfo.Block != null)
-                        //    {
-                        //        localeFlags |= rootInfo.Block.LocaleFlags;
-                        //        contentFlags |= rootInfo.Block.ContentFlags;
-                        //    }
-                        //}
+                            //foreach (var rootInfo in rootInfosLocale)
+                            //{
+                            //    if (rootInfo.Block != null)
+                            //    {
+                            //        localeFlags |= rootInfo.Block.LocaleFlags;
+                            //        contentFlags |= rootInfo.Block.ContentFlags;
+                            //    }
+                            //}
+                        }
                     }
                 }
             }
@@ -501,17 +498,18 @@ namespace CASCExplorer
 
         public void Cleanup()
         {
-            OnCleanup?.Invoke();
-
             Sorter.CASC = null;
 
+            _currentFolder = null;
             _root = null;
 
-            if (_casc != null)
-            {
-                _casc.Clear();
-                _casc = null;
-            }
+            _displayedEntries?.Clear();
+            _displayedEntries = null;
+
+            _casc?.Clear();
+            _casc = null;
+
+            OnCleanup?.Invoke();
         }
 
         public void Search(NoFlickerListView fileList, SearchForVirtualItemEventArgs e)
@@ -519,8 +517,6 @@ namespace CASCExplorer
             bool ignoreCase = true;
             bool searchUp = false;
             int SelectedIndex = fileList.SelectedIndex;
-
-            CASCFolder folder = fileList.Tag as CASCFolder;
 
             var comparisonType = ignoreCase
                                     ? StringComparison.InvariantCultureIgnoreCase
@@ -530,7 +526,7 @@ namespace CASCExplorer
             {
                 for (var i = SelectedIndex - 1; i >= 0; --i)
                 {
-                    var op = folder.Entries.ElementAt(i).Value.Name;
+                    var op = _displayedEntries[i].Name;
                     if (op.IndexOf(e.Text, comparisonType) != -1)
                     {
                         e.Index = i;
@@ -542,7 +538,7 @@ namespace CASCExplorer
             {
                 for (int i = SelectedIndex + 1; i < fileList.Items.Count; ++i)
                 {
-                    var op = folder.Entries.ElementAt(i).Value.Name;
+                    var op = _displayedEntries[i].Name;
                     if (op.IndexOf(e.Text, comparisonType) != -1)
                     {
                         e.Index = i;
@@ -556,7 +552,7 @@ namespace CASCExplorer
         {
             using (StreamWriter sw = new StreamWriter("listfile_export.txt"))
             {
-                foreach (var file in Root.GetFiles(null, true).OrderBy(f => f.FullName, StringComparer.OrdinalIgnoreCase))
+                foreach (var file in CASCFolder.GetFiles(_root.Entries.Select(kv => kv.Value), null, true).OrderBy(f => f.FullName, StringComparer.OrdinalIgnoreCase))
                     sw.WriteLine(file.FullName);
             }
         }
@@ -566,18 +562,18 @@ namespace CASCExplorer
             if (_casc == null)
                 return;
 
-            var files = new Dictionary<string, byte[]>()
-            {
-                { "root", _casc.Encoding.GetEntry(_casc.Config.RootMD5).Key },
-                { "install", _casc.Encoding.GetEntry(_casc.Config.InstallMD5).Key },
-                { "encoding", _casc.Config.EncodingKey },
-                { "download", _casc.Encoding.GetEntry(_casc.Config.DownloadMD5).Key }
-            };
+            EncodingEntry enc;
 
-            foreach (var file in files)
-            {
-                _casc.ExtractFile(file.Value, ".", file.Key);
-            }
+            _casc.SaveFileTo(_casc.Config.EncodingKey, ".", "encoding");
+
+            if (_casc.Encoding.GetEntry(_casc.Config.RootMD5, out enc))
+                _casc.SaveFileTo(enc.Key, ".", "root");
+
+            if (_casc.Encoding.GetEntry(_casc.Config.InstallMD5, out enc))
+                _casc.SaveFileTo(enc.Key, ".", "install");
+
+            if (_casc.Encoding.GetEntry(_casc.Config.DownloadMD5, out enc))
+                _casc.SaveFileTo(enc.Key, ".", "download");
         }
     }
 }

@@ -149,7 +149,7 @@ namespace CASCExplorer
         {
             viewHelper.SetSort(e.Column);
 
-            CASCFolder folder = fileList.Tag as CASCFolder;
+            CASCFolder folder = viewHelper.CurrentFolder;
 
             if (folder == null)
                 return;
@@ -159,7 +159,7 @@ namespace CASCExplorer
 
         private void listView1_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
         {
-            viewHelper.CreateListViewItem(e, fileList.Tag as CASCFolder);
+            viewHelper.CreateListViewItem(e);
         }
 
         private void listView1_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -190,7 +190,7 @@ namespace CASCExplorer
         private bool NavigateFolder()
         {
             // Current folder
-            CASCFolder folder = fileList.Tag as CASCFolder;
+            CASCFolder folder = viewHelper.CurrentFolder;
 
             if (folder == null)
                 return false;
@@ -199,7 +199,7 @@ namespace CASCExplorer
                 return false;
 
             // Selected folder
-            CASCFolder baseEntry = folder.Entries.ElementAt(fileList.SelectedIndex).Value as CASCFolder;
+            CASCFolder baseEntry = viewHelper.DisplayedEntries[fileList.SelectedIndex] as CASCFolder;
 
             if (baseEntry == null)
                 return false;
@@ -222,7 +222,7 @@ namespace CASCExplorer
         private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
         {
             extractToolStripMenuItem.Enabled = fileList.HasSelection;
-            copyNameToolStripMenuItem.Enabled = (fileList.HasSelection && (fileList.Tag as CASCFolder).GetFiles(fileList.SelectedIndices.Cast<int>(), false).Count() > 0) || false;
+            copyNameToolStripMenuItem.Enabled = (fileList.HasSelection && CASCFolder.GetFiles(viewHelper.DisplayedEntries, fileList.SelectedIndices.Cast<int>(), false).Count() > 0) || false;
             getSizeToolStripMenuItem.Enabled = fileList.HasSelection;
         }
 
@@ -234,7 +234,7 @@ namespace CASCExplorer
 
         private void copyNameToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            CASCFolder folder = fileList.Tag as CASCFolder;
+            CASCFolder folder = viewHelper.CurrentFolder;
 
             if (folder == null)
                 return;
@@ -242,7 +242,7 @@ namespace CASCExplorer
             if (!fileList.HasSelection)
                 return;
 
-            var files = folder.GetFiles(fileList.SelectedIndices.Cast<int>(), false).Select(f => f.FullName);
+            var files = CASCFolder.GetFiles(viewHelper.DisplayedEntries, fileList.SelectedIndices.Cast<int>(), false).Select(f => f.FullName);
 
             string temp = string.Join(Environment.NewLine, files);
 
@@ -313,6 +313,12 @@ namespace CASCExplorer
         private void Cleanup()
         {
             fileList.VirtualListSize = 0;
+
+            if (folderTree.Nodes.Count > 0)
+            {
+                folderTree.Nodes[0].Tag = null;
+            }
+
             folderTree.Nodes.Clear();
 
             CDNBuildsToolStripMenuItem.Enabled = false;
@@ -436,7 +442,7 @@ namespace CASCExplorer
 
         private void filterToolStripTextBox_TextChanged(object sender, EventArgs e)
         {
-            viewHelper.UpdateListView(fileList.Tag as CASCFolder, fileList, filterToolStripTextBox.Text);
+            viewHelper.UpdateListView(viewHelper.CurrentFolder, fileList, filterToolStripTextBox.Text);
         }
 
         private void openStorageToolStripButton_Click(object sender, EventArgs e)

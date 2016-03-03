@@ -22,7 +22,7 @@ namespace CASCExplorer
     {
         public int CompSize;
         public int DecompSize;
-        public byte[] Hash;
+        public MD5Hash Hash;
         public byte[] Data;
     }
 
@@ -37,7 +37,7 @@ namespace CASCExplorer
         private const byte ENCRYPTION_ARC4 = 0x41;
         private const int BLTE_MAGIC = 0x45544c42;
 
-        public BLTEHandler(Stream stream, byte[] md5)
+        public BLTEHandler(Stream stream, MD5Hash md5)
         {
             _reader = new BinaryReader(stream, Encoding.ASCII, true);
             Parse(md5);
@@ -65,7 +65,7 @@ namespace CASCExplorer
             return _memStream;
         }
 
-        private void Parse(byte[] md5)
+        private void Parse(MD5Hash md5)
         {
             int size = (int)_reader.BaseStream.Length;
 
@@ -87,8 +87,8 @@ namespace CASCExplorer
 
                 byte[] newHash = _md5.ComputeHash(_reader.ReadBytes(headerSize > 0 ? headerSize : size));
 
-                if (!newHash.EqualsTo(md5))
-                    throw new Exception("data corrupted");
+                if (!md5.EqualsTo(newHash))
+                    throw new BLTEDecoderException("data corrupted");
 
                 _reader.BaseStream.Position = oldPos;
             }
@@ -126,13 +126,13 @@ namespace CASCExplorer
                 {
                     block.CompSize = _reader.ReadInt32BE();
                     block.DecompSize = _reader.ReadInt32BE();
-                    block.Hash = _reader.ReadBytes(16);
+                    block.Hash = _reader.Read<MD5Hash>();
                 }
                 else
                 {
                     block.CompSize = size - 8;
                     block.DecompSize = size - 8 - 1;
-                    block.Hash = null;
+                    block.Hash = default(MD5Hash);
                 }
 
                 blocks[i] = block;
@@ -146,11 +146,11 @@ namespace CASCExplorer
 
                 block.Data = _reader.ReadBytes(block.CompSize);
 
-                if (block.Hash != null && CASCConfig.ValidateData)
+                if (!block.Hash.IsZeroed() && CASCConfig.ValidateData)
                 {
                     byte[] blockHash = _md5.ComputeHash(block.Data);
 
-                    if (!blockHash.EqualsTo(block.Hash))
+                    if (!block.Hash.EqualsTo(blockHash))
                         throw new BLTEDecoderException("MD5 mismatch");
                 }
 

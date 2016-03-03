@@ -6,8 +6,11 @@ namespace CASCExplorer
 {
     public sealed class CASCHandlerLite : CASCHandlerBase
     {
-        private Dictionary<ulong, byte[]> HashToKey = new Dictionary<ulong, byte[]>();
-        private Dictionary<int, ulong> FileDataIdToHash = new Dictionary<int, ulong>();
+        private readonly Dictionary<ulong, MD5Hash> HashToKey = new Dictionary<ulong, MD5Hash>();
+        private readonly Dictionary<int, ulong> FileDataIdToHash = new Dictionary<int, ulong>();
+        private static readonly MD5HashComparer comparer = new MD5HashComparer();
+        private readonly Dictionary<MD5Hash, IndexEntry> CDNIndexData;
+        private readonly Dictionary<MD5Hash, IndexEntry> LocalIndexData;
 
         private CASCHandlerLite(CASCConfig config, LocaleFlags locale, BackgroundWorkerEx worker) : base(config, worker)
         {
@@ -28,7 +31,7 @@ namespace CASCExplorer
 
             Logger.WriteLine("CASCHandlerLite: loading root data...");
 
-            RootHandlerBase RootHandler;
+            WowRootHandler RootHandler;
 
             using (var _ = new PerfCounter("new RootHandler()"))
             {
@@ -40,34 +43,88 @@ namespace CASCExplorer
 
             RootHandler.SetFlags(locale, ContentFlags.None, false);
 
+            CDNIndexData = new Dictionary<MD5Hash, IndexEntry>(comparer);
+
+            if (LocalIndex != null)
+                LocalIndexData = new Dictionary<MD5Hash, IndexEntry>(comparer);
+
             RootEntry rootEntry;
 
             foreach (var entry in RootHandler.GetAllEntries())
             {
                 rootEntry = entry.Value;
 
-                if ((rootEntry.Block.LocaleFlags == locale || (rootEntry.Block.LocaleFlags & locale) != LocaleFlags.None) && (rootEntry.Block.ContentFlags & ContentFlags.LowViolence) == ContentFlags.None)
+                if ((rootEntry.LocaleFlags == locale || (rootEntry.LocaleFlags & locale) != LocaleFlags.None) && (rootEntry.ContentFlags & ContentFlags.LowViolence) == ContentFlags.None)
                 {
-                    var enc = EncodingHandler.GetEntry(rootEntry.MD5);
+                    EncodingEntry enc;
 
-                    if (enc != null)
+                    if (EncodingHandler.GetEntry(rootEntry.MD5, out enc))
                     {
                         if (!HashToKey.ContainsKey(entry.Key))
                         {
                             HashToKey.Add(entry.Key, enc.Key);
-                            FileDataIdToHash.Add(rootEntry.FileDataId, entry.Key);
+                            FileDataIdToHash.Add(RootHandler.GetFileDataIdByHash(entry.Key), entry.Key);
+
+                            if (LocalIndex != null)
+                            {
+                                IndexEntry iLocal = LocalIndex.GetIndexInfo(enc.Key);
+
+                                if (iLocal != null && !LocalIndexData.ContainsKey(enc.Key))
+                                    LocalIndexData.Add(enc.Key, iLocal);
+                            }
+
+                            IndexEntry iCDN = CDNIndex.GetIndexInfo(enc.Key);
+
+                            if (iCDN != null && !CDNIndexData.ContainsKey(enc.Key))
+                                CDNIndexData.Add(enc.Key, iCDN);
                         }
                     }
                 }
             }
 
+            CDNIndex.Clear();
+            //CDNIndex = null;
+            LocalIndex?.Clear();
+            LocalIndex = null;
             RootHandler.Clear();
-            EncodingHandler.Clear();
             RootHandler = null;
+            EncodingHandler.Clear();
             EncodingHandler = null;
             GC.Collect();
 
             Logger.WriteLine("CASCHandlerLite: loaded {0} files", HashToKey.Count);
+        }
+
+        protected override Stream OpenFileOnline(MD5Hash key)
+        {
+            IndexEntry idxInfo = CDNIndex.GetIndexInfo(key);
+
+            if (idxInfo == null)
+                CDNIndexData.TryGetValue(key, out idxInfo);
+
+            return OpenFileLocalInternal(idxInfo, key);
+        }
+
+        protected override Stream GetLocalDataStream(MD5Hash key)
+        {
+            IndexEntry idxInfo;
+
+            if (LocalIndex != null)
+                idxInfo = LocalIndex.GetIndexInfo(key);
+            else
+                LocalIndexData.TryGetValue(key, out idxInfo);
+
+            return GetLocalDataStreamInternal(idxInfo, key);
+        }
+
+        protected override void ExtractFileOnline(MD5Hash key, string path, string name)
+        {
+            IndexEntry idxInfo = CDNIndex.GetIndexInfo(key);
+
+            if (idxInfo == null)
+                CDNIndexData.TryGetValue(key, out idxInfo);
+
+            ExtractFileOnlineInternal(idxInfo, key, path, name);
         }
 
         public static CASCHandlerLite OpenStorage(LocaleFlags locale, CASCConfig config, BackgroundWorkerEx worker = null)
@@ -97,21 +154,11 @@ namespace CASCExplorer
             }
         }
 
-        public bool FileExists(int fileDataId)
-        {
-            return FileDataIdToHash.ContainsKey(fileDataId);
-        }
+        public override bool FileExists(int fileDataId) => FileDataIdToHash.ContainsKey(fileDataId);
 
-        public bool FileExists(string file)
-        {
-            var hash = Hasher.ComputeHash(file);
-            return FileExists(hash);
-        }
+        public override bool FileExists(string file) => FileExists(Hasher.ComputeHash(file));
 
-        public bool FileExists(ulong hash)
-        {
-            return HashToKey.ContainsKey(hash);
-        }
+        public override bool FileExists(ulong hash) => HashToKey.ContainsKey(hash);
 
         public override Stream OpenFile(int filedata)
         {
@@ -123,21 +170,30 @@ namespace CASCExplorer
             return null;
         }
 
-        public override Stream OpenFile(string name)
-        {
-            var hash = Hasher.ComputeHash(name);
-
-            return OpenFile(hash);
-        }
+        public override Stream OpenFile(string name) => OpenFile(Hasher.ComputeHash(name));
 
         public override Stream OpenFile(ulong hash)
         {
-            byte[] key;
+            MD5Hash key;
 
             if (HashToKey.TryGetValue(hash, out key))
                 return OpenFile(key);
 
             return null;
+        }
+
+        public override void SaveFileTo(ulong hash, string extractPath, string fullName)
+        {
+            MD5Hash key;
+
+            if (HashToKey.TryGetValue(hash, out key))
+            {
+                SaveFileTo(key, extractPath, fullName);
+                return;
+            }
+
+            if (CASCConfig.ThrowOnFileNotFound)
+                throw new FileNotFoundException(fullName);
         }
     }
 }

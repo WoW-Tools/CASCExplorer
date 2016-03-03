@@ -4,13 +4,6 @@ using System.Linq;
 
 namespace CASCExplorer
 {
-    public class IndexEntry
-    {
-        public int Index;
-        public int Offset;
-        public int Size;
-    }
-
     public sealed class CASCHandler : CASCHandlerBase
     {
         private EncodingHandler EncodingHandler;
@@ -18,10 +11,10 @@ namespace CASCExplorer
         private RootHandlerBase RootHandler;
         private InstallHandler InstallHandler;
 
-        public EncodingHandler Encoding { get { return EncodingHandler; } }
-        public DownloadHandler Download { get { return DownloadHandler; } }
-        public RootHandlerBase Root { get { return RootHandler; } }
-        public InstallHandler Install { get { return InstallHandler; } }
+        public EncodingHandler Encoding => EncodingHandler;
+        public DownloadHandler Download => DownloadHandler;
+        public RootHandlerBase Root => RootHandler;
+        public InstallHandler Install => InstallHandler;
 
         private CASCHandler(CASCConfig config, BackgroundWorkerEx worker) : base(config, worker)
         {
@@ -87,10 +80,7 @@ namespace CASCExplorer
             }
         }
 
-        public static CASCHandler OpenStorage(CASCConfig config, BackgroundWorkerEx worker = null)
-        {
-            return Open(worker, config);
-        }
+        public static CASCHandler OpenStorage(CASCConfig config, BackgroundWorkerEx worker = null) => Open(worker, config);
 
         public static CASCHandler OpenLocalStorage(string basePath, BackgroundWorkerEx worker = null)
         {
@@ -114,46 +104,35 @@ namespace CASCExplorer
             }
         }
 
-        public bool FileExists(int fileDataId)
+        public override bool FileExists(int fileDataId)
         {
             WowRootHandler rh = Root as WowRootHandler;
 
-            if (rh != null)
-            {
-                var hash = rh.GetHashByFileDataId(fileDataId);
+            if (rh == null)
+                return false;
 
-                return FileExists(hash);
-            }
-
-            return false;
+            return FileExists(rh.GetHashByFileDataId(fileDataId));
         }
 
-        public bool FileExists(string file)
-        {
-            var hash = Hasher.ComputeHash(file);
-            return FileExists(hash);
-        }
+        public override bool FileExists(string file) => FileExists(Hasher.ComputeHash(file));
 
-        public bool FileExists(ulong hash)
-        {
-            var rootInfos = RootHandler.GetAllEntries(hash);
-            return rootInfos != null && rootInfos.Any();
-        }
+        public override bool FileExists(ulong hash) => RootHandler.GetAllEntries(hash).Any();
 
-        public EncodingEntry GetEncodingEntry(ulong hash)
+        public bool GetEncodingEntry(ulong hash, out EncodingEntry enc)
         {
             var rootInfos = RootHandler.GetEntries(hash);
             if (rootInfos.Any())
-                return EncodingHandler.GetEntry(rootInfos.First().MD5);
+                return EncodingHandler.GetEntry(rootInfos.First().MD5, out enc);
 
             if ((CASCConfig.LoadFlags & LoadFlags.Install) != 0)
             {
                 var installInfos = Install.GetEntries().Where(e => Hasher.ComputeHash(e.Name) == hash);
                 if (installInfos.Any())
-                    return EncodingHandler.GetEntry(installInfos.First().MD5);
+                    return EncodingHandler.GetEntry(installInfos.First().MD5, out enc);
             }
 
-            return null;
+            enc = default(EncodingEntry);
+            return false;
         }
 
         public override Stream OpenFile(int fileDataId)
@@ -161,29 +140,20 @@ namespace CASCExplorer
             WowRootHandler rh = Root as WowRootHandler;
 
             if (rh != null)
-            {
-                var hash = rh.GetHashByFileDataId(fileDataId);
-
-                return OpenFile(hash);
-            }
+                return OpenFile(rh.GetHashByFileDataId(fileDataId));
 
             if (CASCConfig.ThrowOnFileNotFound)
                 throw new FileNotFoundException("FileData: " + fileDataId.ToString());
             return null;
         }
 
-        public override Stream OpenFile(string name)
-        {
-            var hash = Hasher.ComputeHash(name);
-
-            return OpenFile(hash);
-        }
+        public override Stream OpenFile(string name) => OpenFile(Hasher.ComputeHash(name));
 
         public override Stream OpenFile(ulong hash)
         {
-            EncodingEntry encInfo = GetEncodingEntry(hash);
+            EncodingEntry encInfo;
 
-            if (encInfo != null)
+            if (GetEncodingEntry(hash, out encInfo))
                 return OpenFile(encInfo.Key);
 
             if (CASCConfig.ThrowOnFileNotFound)
@@ -191,20 +161,13 @@ namespace CASCExplorer
             return null;
         }
 
-        public void SaveFileTo(string fullName, string extractPath)
+        public override void SaveFileTo(ulong hash, string extractPath, string fullName)
         {
-            var hash = Hasher.ComputeHash(fullName);
+            EncodingEntry encInfo;
 
-            SaveFileTo(hash, extractPath, fullName);
-        }
-
-        public void SaveFileTo(ulong hash, string extractPath, string fullName)
-        {
-            EncodingEntry encInfo = GetEncodingEntry(hash);
-
-            if (encInfo != null)
+            if (GetEncodingEntry(hash, out encInfo))
             {
-                ExtractFile(encInfo.Key, extractPath, fullName);
+                SaveFileTo(encInfo.Key, extractPath, fullName);
                 return;
             }
 
@@ -212,9 +175,27 @@ namespace CASCExplorer
                 throw new FileNotFoundException(fullName);
         }
 
+        protected override Stream OpenFileOnline(MD5Hash key)
+        {
+            IndexEntry idxInfo = CDNIndex.GetIndexInfo(key);
+            return OpenFileLocalInternal(idxInfo, key);
+        }
+
+        protected override Stream GetLocalDataStream(MD5Hash key)
+        {
+            IndexEntry idxInfo = LocalIndex.GetIndexInfo(key);
+            return GetLocalDataStreamInternal(idxInfo, key);
+        }
+
+        protected override void ExtractFileOnline(MD5Hash key, string path, string name)
+        {
+            IndexEntry idxInfo = CDNIndex.GetIndexInfo(key);
+            ExtractFileOnlineInternal(idxInfo, key, path, name);
+        }
+
         public void Clear()
         {
-            CDNIndex.Clear();
+            CDNIndex?.Clear();
             CDNIndex = null;
 
             foreach (var stream in DataStreams)
@@ -222,29 +203,20 @@ namespace CASCExplorer
 
             DataStreams.Clear();
 
-            EncodingHandler.Clear();
+            EncodingHandler?.Clear();
             EncodingHandler = null;
 
-            if (InstallHandler != null)
-            {
-                InstallHandler.Clear();
-                InstallHandler = null;
-            }
+            InstallHandler?.Clear();
+            InstallHandler = null;
 
-            if (LocalIndex != null)
-            {
-                LocalIndex.Clear();
-                LocalIndex = null;
-            }
+            LocalIndex?.Clear();
+            LocalIndex = null;
 
-            RootHandler.Clear();
+            RootHandler?.Clear();
             RootHandler = null;
 
-            if (DownloadHandler != null)
-            {
-                DownloadHandler.Clear();
-                DownloadHandler = null;
-            }
+            DownloadHandler?.Clear();
+            DownloadHandler = null;
         }
     }
 }

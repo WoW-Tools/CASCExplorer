@@ -68,8 +68,6 @@
       <DependentUpon>BruteforceForm.cs</DependentUpon>
     </Compile>
     <Compile Include="CASCViewHelper.cs" />
-    <Compile Include="DB2Reader.cs" />
-    <Compile Include="DB3Reader.cs" />
     <Compile Include="FileScanner.cs" />
     <Compile Include="CASCEntrySorter.cs" />
     <Compile Include="ExtractProgress.cs">

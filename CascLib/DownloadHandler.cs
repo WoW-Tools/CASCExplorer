@@ -8,9 +8,9 @@ namespace CASCExplorer
     public class DownloadEntry
     {
         public int Index;
-        public byte[] Unk;
+        //public byte[] Unk;
 
-        public Dictionary<string, DownloadTag> Tags;
+        public IEnumerable<KeyValuePair<string, DownloadTag>> Tags;
     }
 
     public class DownloadTag
@@ -21,14 +21,11 @@ namespace CASCExplorer
 
     public class DownloadHandler
     {
-        private static readonly ByteArrayComparer comparer = new ByteArrayComparer();
-        private readonly Dictionary<byte[], DownloadEntry> DownloadData = new Dictionary<byte[], DownloadEntry>(comparer);
-        Dictionary<string, DownloadTag> Tags = new Dictionary<string, DownloadTag>();
+        private static readonly MD5HashComparer comparer = new MD5HashComparer();
+        private Dictionary<MD5Hash, DownloadEntry> DownloadData = new Dictionary<MD5Hash, DownloadEntry>(comparer);
+        private Dictionary<string, DownloadTag> Tags = new Dictionary<string, DownloadTag>();
 
-        public int Count
-        {
-            get { return DownloadData.Count; }
-        }
+        public int Count => DownloadData.Count;
 
         public DownloadHandler(BinaryReader stream, BackgroundWorkerEx worker)
         {
@@ -48,11 +45,13 @@ namespace CASCExplorer
 
             for (int i = 0; i < numFiles; i++)
             {
-                byte[] key = stream.ReadBytes(0x10);
+                MD5Hash key = stream.Read<MD5Hash>();
 
-                byte[] unk = stream.ReadBytes(0xA);
+                //byte[] unk = stream.ReadBytes(0xA);
+                stream.Skip(0xA);
 
-                var entry = new DownloadEntry() { Index = i, Unk = unk };
+                //var entry = new DownloadEntry() { Index = i, Unk = unk };
+                var entry = new DownloadEntry() { Index = i };
 
                 DownloadData.Add(key, entry);
 
@@ -81,26 +80,29 @@ namespace CASCExplorer
             foreach (var entry in DownloadData)
             {
                 if (entry.Value.Tags == null)
-                    entry.Value.Tags = Tags.Where(kv => kv.Value.Bits[entry.Value.Index]).ToDictionary(kv => kv.Key, kv => kv.Value);
+                    entry.Value.Tags = Tags.Where(kv => kv.Value.Bits[entry.Value.Index]);
 
-                Logger.WriteLine("{0} {1} {2}", entry.Key.ToHexString(), entry.Value.Unk.ToHexString(), string.Join(",", entry.Value.Tags.Select(tag => tag.Key)));
+                Logger.WriteLine("{0} {1}", entry.Key.ToHexString(), string.Join(",", entry.Value.Tags.Select(tag => tag.Key)));
             }
         }
 
-        public DownloadEntry GetEntry(byte[] key)
+        public DownloadEntry GetEntry(MD5Hash key)
         {
             DownloadEntry entry;
             DownloadData.TryGetValue(key, out entry);
 
             if (entry != null && entry.Tags == null)
-                entry.Tags = Tags.Where(kv => kv.Value.Bits[entry.Index]).ToDictionary(kv => kv.Key, kv => kv.Value);
+                entry.Tags = Tags.Where(kv => kv.Value.Bits[entry.Index]);
 
             return entry;
         }
 
         public void Clear()
         {
+            Tags.Clear();
+            Tags = null;
             DownloadData.Clear();
+            DownloadData = null;
         }
     }
 }

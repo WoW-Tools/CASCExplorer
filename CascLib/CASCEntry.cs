@@ -17,12 +17,10 @@ namespace CASCExplorer
         private string _name;
 
         public Dictionary<string, ICASCEntry> Entries { get; set; }
-        public Dictionary<string, ICASCEntry> EntriesMirror { get; private set; }
 
         public CASCFolder(string name)
         {
             Entries = new Dictionary<string, ICASCEntry>(StringComparer.OrdinalIgnoreCase);
-            EntriesMirror = new Dictionary<string, ICASCEntry>(StringComparer.OrdinalIgnoreCase);
             _name = name;
         }
 
@@ -43,23 +41,25 @@ namespace CASCExplorer
             return entry;
         }
 
-        public IEnumerable<CASCFile> GetFiles(IEnumerable<int> selection = null, bool recursive = true)
+        public static IEnumerable<CASCFile> GetFiles(IEnumerable<ICASCEntry> entries, IEnumerable<int> selection = null, bool recursive = true)
         {
             if (selection != null)
             {
                 foreach (int index in selection)
                 {
-                    var entry = Entries.ElementAt(index);
+                    var entry = entries.ElementAt(index);
 
-                    if (entry.Value is CASCFile)
+                    if (entry is CASCFile)
                     {
-                        yield return entry.Value as CASCFile;
+                        yield return entry as CASCFile;
                     }
                     else
                     {
                         if (recursive)
                         {
-                            foreach (var file in (entry.Value as CASCFolder).GetFiles())
+                            var folder = entry as CASCFolder;
+
+                            foreach (var file in GetFiles(folder.Entries.Select(kv => kv.Value)))
                             {
                                 yield return file;
                             }
@@ -69,17 +69,19 @@ namespace CASCExplorer
             }
             else
             {
-                foreach (var entry in Entries)
+                foreach (var entry in entries)
                 {
-                    if (entry.Value is CASCFile)
+                    if (entry is CASCFile)
                     {
-                        yield return entry.Value as CASCFile;
+                        yield return entry as CASCFile;
                     }
                     else
                     {
                         if (recursive)
                         {
-                            foreach (var file in (entry.Value as CASCFolder).GetFiles())
+                            var folder = entry as CASCFolder;
+
+                            foreach (var file in GetFiles(folder.Entries.Select(kv => kv.Value)))
                             {
                                 yield return file;
                             }
@@ -139,12 +141,8 @@ namespace CASCExplorer
 
         public int GetSize(CASCHandler casc)
         {
-            var encoding = casc.GetEncodingEntry(hash);
-
-            if (encoding != null)
-                return encoding.Size;
-
-            return 0;
+            EncodingEntry enc;
+            return casc.GetEncodingEntry(hash, out enc) ? enc.Size : 0;
         }
 
         public int CompareTo(ICASCEntry other, int col, CASCHandler casc)
@@ -166,8 +164,8 @@ namespace CASCExplorer
                     {
                         var e1 = casc.Root.GetEntries(Hash);
                         var e2 = casc.Root.GetEntries(other.Hash);
-                        var flags1 = e1.Any() ? e1.First().Block.LocaleFlags : LocaleFlags.None;
-                        var flags2 = e2.Any() ? e2.First().Block.LocaleFlags : LocaleFlags.None;
+                        var flags1 = e1.Any() ? e1.First().LocaleFlags : LocaleFlags.None;
+                        var flags2 = e2.Any() ? e2.First().LocaleFlags : LocaleFlags.None;
                         result = flags1.CompareTo(flags2);
                     }
                     break;
@@ -175,8 +173,8 @@ namespace CASCExplorer
                     {
                         var e1 = casc.Root.GetEntries(Hash);
                         var e2 = casc.Root.GetEntries(other.Hash);
-                        var flags1 = e1.Any() ? e1.First().Block.ContentFlags : ContentFlags.None;
-                        var flags2 = e2.Any() ? e2.First().Block.ContentFlags : ContentFlags.None;
+                        var flags1 = e1.Any() ? e1.First().ContentFlags : ContentFlags.None;
+                        var flags2 = e2.Any() ? e2.First().ContentFlags : ContentFlags.None;
                         result = flags1.CompareTo(flags2);
                     }
                     break;

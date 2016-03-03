@@ -2,18 +2,18 @@
 
 namespace CASCExplorer
 {
-    public class MultiDictionary<K, V> : Dictionary<K, HashSet<V>>
+    public class MultiDictionary<K, V> : Dictionary<K, List<V>>
     {
         public void Add(K key, V value)
         {
-            HashSet<V> hset;
+            List<V> hset;
             if (TryGetValue(key, out hset))
             {
                 hset.Add(value);
             }
             else
             {
-                hset = new HashSet<V>();
+                hset = new List<V>();
                 hset.Add(value);
                 base[key] = hset;
             }

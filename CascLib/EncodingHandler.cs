@@ -3,16 +3,16 @@ using System.IO;
 
 namespace CASCExplorer
 {
-    public class EncodingEntry
+    public struct EncodingEntry
     {
+        public MD5Hash Key;
         public int Size;
-        public byte[] Key;
     }
 
     public class EncodingHandler
     {
-        private static readonly ByteArrayComparer comparer = new ByteArrayComparer();
-        private readonly Dictionary<byte[], EncodingEntry> EncodingData = new Dictionary<byte[], EncodingEntry>(comparer);
+        private static readonly MD5HashComparer comparer = new MD5HashComparer();
+        private Dictionary<MD5Hash, EncodingEntry> EncodingData = new Dictionary<MD5Hash, EncodingEntry>(comparer);
 
         private const int CHUNK_SIZE = 4096;
 
@@ -55,7 +55,7 @@ namespace CASCExplorer
                 while ((keysCount = stream.ReadUInt16()) != 0)
                 {
                     int fileSize = stream.ReadInt32BE();
-                    byte[] md5 = stream.ReadBytes(16);
+                    MD5Hash md5 = stream.Read<MD5Hash>();
 
                     EncodingEntry entry = new EncodingEntry();
                     entry.Size = fileSize;
@@ -63,7 +63,7 @@ namespace CASCExplorer
                     // how do we handle multiple keys?
                     for (int ki = 0; ki < keysCount; ++ki)
                     {
-                        byte[] key = stream.ReadBytes(16);
+                        MD5Hash key = stream.Read<MD5Hash>();
 
                         // use first key for now
                         if (ki == 0)
@@ -111,7 +111,7 @@ namespace CASCExplorer
             // string block till the end of file
         }
 
-        public IEnumerable<KeyValuePair<byte[], EncodingEntry>> Entries
+        public IEnumerable<KeyValuePair<MD5Hash, EncodingEntry>> Entries
         {
             get
             {
@@ -120,16 +120,15 @@ namespace CASCExplorer
             }
         }
 
-        public EncodingEntry GetEntry(byte[] md5)
+        public bool GetEntry(MD5Hash md5, out EncodingEntry enc)
         {
-            EncodingEntry result;
-            EncodingData.TryGetValue(md5, out result);
-            return result;
+            return EncodingData.TryGetValue(md5, out enc);
         }
 
         public void Clear()
         {
             EncodingData.Clear();
+            EncodingData = null;
         }
     }
 }

@@ -3,6 +3,7 @@ using CASCExplorer;
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace CASCConsole
@@ -45,7 +46,7 @@ namespace CASCConsole
 
             Console.WriteLine("Loaded.");
 
-            Console.WriteLine("Extract params:", pattern, dest, locale);
+            Console.WriteLine("Extract params:");
             Console.WriteLine("    Pattern: {0}", pattern);
             Console.WriteLine("    Destination: {0}", dest);
             Console.WriteLine("    LocaleFlags: {0}", locale);
@@ -53,7 +54,7 @@ namespace CASCConsole
 
             Wildcard wildcard = new Wildcard(pattern, true, RegexOptions.IgnoreCase);
 
-            foreach (var file in root.GetFiles())
+            foreach (var file in CASCFolder.GetFiles(root.Entries.Select(kv => kv.Value)))
             {
                 if (wildcard.IsMatch(file.FullName))
                 {

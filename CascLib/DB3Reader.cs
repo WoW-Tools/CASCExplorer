@@ -6,7 +6,7 @@ using System.Text;
 
 namespace CASCExplorer
 {
-    class DB3Row
+    public class DB3Row
     {
         private byte[] m_data;
         private DB3Reader m_reader;
@@ -63,7 +63,7 @@ namespace CASCExplorer
         }
     }
 
-    class DB3Reader : IEnumerable<KeyValuePair<int, DB3Row>>
+    public class DB3Reader : IEnumerable<KeyValuePair<int, DB3Row>>
     {
         private readonly int HeaderSize;
         private const uint DB3FmtSig = 0x33424457;          // WDB3

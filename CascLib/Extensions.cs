@@ -2,8 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace CASCExplorer
@@ -12,7 +10,8 @@ namespace CASCExplorer
     {
         public static int ReadInt32BE(this BinaryReader reader)
         {
-            return BitConverter.ToInt32(reader.ReadBytes(4).Reverse().ToArray(), 0);
+            byte[] val = reader.ReadBytes(4);
+            return val[3] | val[2] << 8 | val[1] << 16 | val[0] << 24;
         }
 
         public static void Skip(this BinaryReader reader, int bytes)
@@ -22,37 +21,36 @@ namespace CASCExplorer
 
         public static uint ReadUInt32BE(this BinaryReader reader)
         {
-            return BitConverter.ToUInt32(reader.ReadBytes(4).Reverse().ToArray(), 0);
+            byte[] val = reader.ReadBytes(4);
+            return (uint)(val[3] | val[2] << 8 | val[1] << 16 | val[0] << 24);
         }
 
-        public static T Read<T>(this BinaryReader reader) where T : struct
+        public unsafe static T Read<T>(this BinaryReader reader) where T : struct
         {
-            byte[] result = reader.ReadBytes(Marshal.SizeOf(typeof(T)));
-            GCHandle handle = GCHandle.Alloc(result, GCHandleType.Pinned);
-            T returnObject = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
-            handle.Free();
-            return returnObject;
+            byte[] result = reader.ReadBytes(FastStruct<T>.Size);
+
+            fixed (byte* ptr = result)
+                return FastStruct<T>.PtrToStructure(ptr);
         }
 
-        public static T[] ReadArray<T>(this BinaryReader reader) where T : struct
+        public unsafe static T[] ReadArray<T>(this BinaryReader reader) where T : struct
         {
-            long numBytes = reader.ReadInt64();
+            int numBytes = (int)reader.ReadInt64();
 
-            int itemCount = (int)numBytes / Marshal.SizeOf(typeof(T));
+            byte[] result = reader.ReadBytes(numBytes);
 
-            T[] data = new T[itemCount];
-
-            for (int i = 0; i < itemCount; ++i)
-                data[i] = reader.Read<T>();
-
-            reader.BaseStream.Position += (0 - (int)numBytes) & 0x07;
-
-            return data;
+            fixed (byte* ptr = result)
+            {
+                T[] data = FastStruct<T>.ReadArray((IntPtr)ptr, numBytes);
+                reader.BaseStream.Position += (0 - numBytes) & 0x07;
+                return data;
+            }
         }
 
         public static short ReadInt16BE(this BinaryReader reader)
         {
-            return BitConverter.ToInt16(reader.ReadBytes(2).Reverse().ToArray(), 0);
+            byte[] val = reader.ReadBytes(2);
+            return (short)(val[1] | val[0] << 8);
         }
 
         public static void CopyBytes(this Stream input, Stream output, int bytes)
@@ -89,14 +87,6 @@ namespace CASCExplorer
             return true;
         }
 
-        public static bool IsZeroed(this byte[] array)
-        {
-            for (var i = 0; i < array.Length; ++i)
-                if (array[i] != 0)
-                    return false;
-            return true;
-        }
-
         public static byte[] Copy(this byte[] array, int len)
         {
             byte[] ret = new byte[len];
@@ -115,6 +105,54 @@ namespace CASCExplorer
             }
 
             return sb.ToString();
+        }
+
+        public static unsafe bool EqualsTo(this MD5Hash key, byte[] array)
+        {
+            if (array.Length != 16)
+                return false;
+
+            MD5Hash other;
+
+            fixed (byte* ptr = array)
+                other = *(MD5Hash*)ptr;
+
+            for (var i = 0; i < 16; ++i)
+                if (key.Value[i] != other.Value[i])
+                    return false;
+
+            return true;
+        }
+
+        public static unsafe string ToHexString(this MD5Hash key)
+        {
+            byte[] array = new byte[16];
+
+            fixed (byte* aptr = array)
+            {
+                *(MD5Hash*)aptr = key;
+            }
+
+            return array.ToHexString();
+        }
+
+        public static unsafe bool IsZeroed(this MD5Hash key)
+        {
+            for (var i = 0; i < 16; ++i)
+                if (key.Value[i] != 0)
+                    return false;
+            return true;
+        }
+
+        public static unsafe MD5Hash ToMD5(this byte[] array)
+        {
+            if (array.Length != 16)
+                throw new ArgumentException("array size != 16");
+
+            fixed (byte* ptr = array)
+            {
+                return *(MD5Hash*)ptr;
+            }
         }
     }
 

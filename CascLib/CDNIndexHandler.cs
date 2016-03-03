@@ -5,24 +5,28 @@ using System.Net;
 
 namespace CASCExplorer
 {
+    public class IndexEntry
+    {
+        public int Index;
+        public int Offset;
+        public int Size;
+    }
+
     public class CDNIndexHandler
     {
-        private static readonly ByteArrayComparer comparer = new ByteArrayComparer();
-        private readonly Dictionary<byte[], IndexEntry> CDNIndexData = new Dictionary<byte[], IndexEntry>(comparer);
+        private static readonly MD5HashComparer comparer = new MD5HashComparer();
+        private Dictionary<MD5Hash, IndexEntry> CDNIndexData = new Dictionary<MD5Hash, IndexEntry>(comparer);
 
-        private CASCConfig CASCConfig;
+        private CASCConfig config;
         private BackgroundWorkerEx worker;
         private SyncDownloader downloader;
-        public static CDNCache Cache = new CDNCache("cache");
+        public static readonly CDNCache Cache = new CDNCache("cache");
 
-        public int Count
-        {
-            get { return CDNIndexData.Count; }
-        }
+        public int Count => CDNIndexData.Count;
 
         private CDNIndexHandler(CASCConfig cascConfig, BackgroundWorkerEx worker)
         {
-            CASCConfig = cascConfig;
+            config = cascConfig;
             this.worker = worker;
             downloader = new SyncDownloader(worker);
         }
@@ -61,10 +65,10 @@ namespace CASCExplorer
 
                 for (int j = 0; j < count; ++j)
                 {
-                    byte[] key = br.ReadBytes(16);
+                    MD5Hash key = br.Read<MD5Hash>();
 
                     if (key.IsZeroed()) // wtf?
-                        key = br.ReadBytes(16);
+                        key = br.Read<MD5Hash>();
 
                     if (key.IsZeroed()) // wtf?
                         throw new Exception("key.IsZeroed()");
@@ -83,8 +87,8 @@ namespace CASCExplorer
         {
             try
             {
-                string file = CASCConfig.CDNPath + "/data/" + archive.Substring(0, 2) + "/" + archive.Substring(2, 2) + "/" + archive + ".index";
-                string url = "http://" + CASCConfig.CDNHost + "/" + file;
+                string file = config.CDNPath + "/data/" + archive.Substring(0, 2) + "/" + archive.Substring(2, 2) + "/" + archive + ".index";
+                string url = "http://" + config.CDNHost + "/" + file;
 
                 Stream stream = Cache.OpenFile(file, url, false);
 
@@ -108,9 +112,9 @@ namespace CASCExplorer
         {
             try
             {
-                string dataFolder = CASCGame.GetDataFolder(CASCConfig.GameType);
+                string dataFolder = CASCGame.GetDataFolder(config.GameType);
 
-                string path = Path.Combine(CASCConfig.BasePath, dataFolder, "indices", archive + ".index");
+                string path = Path.Combine(config.BasePath, dataFolder, "indices", archive + ".index");
 
                 using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                     ParseIndex(fs, i);
@@ -123,10 +127,10 @@ namespace CASCExplorer
 
         public Stream OpenDataFile(IndexEntry entry)
         {
-            var archive = CASCConfig.Archives[entry.Index];
+            var archive = config.Archives[entry.Index];
 
-            string file = CASCConfig.CDNPath + "/data/" + archive.Substring(0, 2) + "/" + archive.Substring(2, 2) + "/" + archive;
-            string url = "http://" + CASCConfig.CDNHost + "/" + file;
+            string file = config.CDNPath + "/data/" + archive.Substring(0, 2) + "/" + archive.Substring(2, 2) + "/" + archive;
+            string url = "http://" + config.CDNHost + "/" + file;
 
             Stream stream = Cache.OpenFile(file, url, true);
 
@@ -150,14 +154,14 @@ namespace CASCExplorer
             }
         }
 
-        public Stream OpenDataFileDirect(byte[] key)
+        public Stream OpenDataFileDirect(MD5Hash key)
         {
             var keyStr = key.ToHexString().ToLower();
 
             worker?.ReportProgress(0, string.Format("Downloading \"{0}\" file...", keyStr));
 
-            string file = CASCConfig.CDNPath + "/data/" + keyStr.Substring(0, 2) + "/" + keyStr.Substring(2, 2) + "/" + keyStr;
-            string url = "http://" + CASCConfig.CDNHost + "/" + file;
+            string file = config.CDNPath + "/data/" + keyStr.Substring(0, 2) + "/" + keyStr.Substring(2, 2) + "/" + keyStr;
+            string url = "http://" + config.CDNHost + "/" + file;
 
             Stream stream = Cache.OpenFile(file, url, false);
 
@@ -192,7 +196,7 @@ namespace CASCExplorer
             }
         }
 
-        public IndexEntry GetIndexInfo(byte[] key)
+        public IndexEntry GetIndexInfo(MD5Hash key)
         {
             IndexEntry result;
 
@@ -205,6 +209,11 @@ namespace CASCExplorer
         public void Clear()
         {
             CDNIndexData.Clear();
+            CDNIndexData = null;
+
+            config = null;
+            worker = null;
+            downloader = null;
         }
     }
 }

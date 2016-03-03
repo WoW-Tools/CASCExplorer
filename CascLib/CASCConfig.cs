@@ -9,6 +9,7 @@ namespace CASCExplorer
     public enum LoadFlags
     {
         All = -1,
+        None = 0,
         Download = 1,
         Install = 2,
     }
@@ -124,7 +125,7 @@ namespace CASCExplorer
         public CASCGameType GameType { get; private set; }
         public static bool ValidateData { get; set; } = true;
         public static bool ThrowOnFileNotFound { get; set; } = true;
-        public static LoadFlags LoadFlags { get; set; } = LoadFlags.All;
+        public static LoadFlags LoadFlags { get; set; } = LoadFlags.None;
 
         public static CASCConfig LoadOnlineStorageConfig(string product, string region, bool useCurrentBuild = false)
         {
@@ -258,29 +259,29 @@ namespace CASCExplorer
 
         public string Product { get; private set; }
 
-        public byte[] RootMD5
+        public MD5Hash RootMD5
         {
-            get { return _Builds[ActiveBuild]["root"][0].ToByteArray(); }
+            get { return _Builds[ActiveBuild]["root"][0].ToByteArray().ToMD5(); }
         }
 
-        public byte[] DownloadMD5
+        public MD5Hash DownloadMD5
         {
-            get { return _Builds[ActiveBuild]["download"][0].ToByteArray(); }
+            get { return _Builds[ActiveBuild]["download"][0].ToByteArray().ToMD5(); }
         }
 
-        public byte[] InstallMD5
+        public MD5Hash InstallMD5
         {
-            get { return _Builds[ActiveBuild]["install"][0].ToByteArray(); }
+            get { return _Builds[ActiveBuild]["install"][0].ToByteArray().ToMD5(); }
         }
 
-        public byte[] EncodingMD5
+        public MD5Hash EncodingMD5
         {
-            get { return _Builds[ActiveBuild]["encoding"][0].ToByteArray(); }
+            get { return _Builds[ActiveBuild]["encoding"][0].ToByteArray().ToMD5(); }
         }
 
-        public byte[] EncodingKey
+        public MD5Hash EncodingKey
         {
-            get { return _Builds[ActiveBuild]["encoding"][1].ToByteArray(); }
+            get { return _Builds[ActiveBuild]["encoding"][1].ToByteArray().ToMD5(); }
         }
 
         public string BuildUID

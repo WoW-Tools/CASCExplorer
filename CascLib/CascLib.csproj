@@ -47,13 +47,16 @@
     </Compile>
     <Compile Include="CASCHandlerBase.cs" />
     <Compile Include="CASCHandlerLite.cs" />
+    <Compile Include="DB2Reader.cs" />
+    <Compile Include="DB3Reader.cs" />
     <Compile Include="DBCReader.cs" />
     <Compile Include="DownloadHandler.cs" />
+    <Compile Include="FastStruct.cs" />
     <Compile Include="KeyService.cs" />
     <Compile Include="OWRootHandler.cs" />
     <Compile Include="HSRootHandler.cs" />
     <Compile Include="BLTEHandler.cs" />
-    <Compile Include="ByteArrayComparer.cs" />
+    <Compile Include="MD5HashComparer.cs" />
     <Compile Include="CASCConfig.cs" />
     <Compile Include="CASCEntry.cs" />
     <Compile Include="CASCGame.cs" />

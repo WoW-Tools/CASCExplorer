@@ -2,35 +2,34 @@
 
 namespace CASCExplorer
 {
-    class ByteArrayComparer : IEqualityComparer<byte[]>
+    class MD5HashComparer : IEqualityComparer<MD5Hash>
     {
         const uint FnvPrime32 = 16777619;
         const uint FnvOffset32 = 2166136261;
 
-        public bool Equals(byte[] x, byte[] y)
+        public unsafe bool Equals(MD5Hash x, MD5Hash y)
         {
-            if (x.Length != y.Length)
-                return false;
-
-            for (int i = 0; i < x.Length; ++i)
-                if (x[i] != y[i])
+            for (int i = 0; i < 16; ++i)
+                if (x.Value[i] != y.Value[i])
                     return false;
 
             return true;
         }
 
-        public int GetHashCode(byte[] obj)
+        public int GetHashCode(MD5Hash obj)
         {
             return To32BitFnv1aHash(obj);
         }
 
-        private int To32BitFnv1aHash(byte[] toHash)
+        private unsafe int To32BitFnv1aHash(MD5Hash toHash)
         {
             uint hash = FnvOffset32;
 
-            foreach (var chunk in toHash)
+            uint* ptr = (uint*)&toHash;
+
+            for (int i = 0; i < 4; i++)
             {
-                hash ^= chunk;
+                hash ^= ptr[i];
                 hash *= FnvPrime32;
             }
 
