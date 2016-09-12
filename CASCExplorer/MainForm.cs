@@ -230,7 +230,7 @@ namespace CASCExplorer
 
         private void extractToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            viewHelper.ExtractFiles(fileList);
+            viewHelper.ExtractFiles(fileList, filterToolStripTextBox.Text);
         }
 
         private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)

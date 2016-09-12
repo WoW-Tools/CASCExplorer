@@ -45,7 +45,7 @@ namespace CASCExplorer
         public bool AnalyzeSoundFiles { get; set; } = true;
         public bool AddFileDataIdToSoundFiles { get; set; } = true;
 
-        public void ExtractFiles(NoFlickerListView filesList)
+        public void ExtractFiles(NoFlickerListView filesList, string filter)
         {
             if (_currentFolder == null)
                 return;
@@ -56,7 +56,7 @@ namespace CASCExplorer
             if (extractProgress == null)
                 extractProgress = new ExtractProgress();
 
-            var files = CASCFolder.GetFiles(_displayedEntries, filesList.SelectedIndices.Cast<int>()).ToList();
+            var files = CASCFolder.GetFiles(_displayedEntries, filesList.SelectedIndices.Cast<int>(), true, filter).ToList();
             extractProgress.SetExtractData(_casc, files);
             extractProgress.ShowDialog();
         }

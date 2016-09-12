@@ -95,12 +95,10 @@ namespace CASCConsole
 
             if (mode == "pattern")
             {
-                Wildcard wildcard = new Wildcard(pattern, true, RegexOptions.IgnoreCase);
 
-                foreach (var file in CASCFolder.GetFiles(root.Entries.Select(kv => kv.Value)))
+                foreach (var file in CASCFolder.GetFiles(root.Entries.Select(kv => kv.Value), filter: pattern))
                 {
-                    if (wildcard.IsMatch(file.FullName))
-                        ExtractFile(cascHandler, file.FullName, dest);
+                    ExtractFile(cascHandler, file.FullName, dest);
                 }
             }
             else if (mode == "listfile")

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace CASCLib
 {
@@ -34,14 +35,19 @@ namespace CASCLib
             return entry;
         }
 
-        public static IEnumerable<CASCFile> GetFiles(IEnumerable<ICASCEntry> entries, IEnumerable<int> selection = null, bool recursive = true)
+        public static IEnumerable<CASCFile> GetFiles(IEnumerable<ICASCEntry> entries, IEnumerable<int> selection = null, bool recursive = true, string filter = "")
         {
+            var wildcard = filter != string.Empty && filter != "*" ? new Wildcard(filter, false, RegexOptions.IgnoreCase) : null;
+
             var entries2 = selection != null ? selection.Select(index => entries.ElementAt(index)) : entries;
 
             foreach (var entry in entries2)
             {
                 if (entry is CASCFile file1)
                 {
+                    if (wildcard != null && !wildcard.IsMatch(file1.Name))
+                        continue;
+
                     yield return file1;
                 }
                 else
@@ -50,8 +56,10 @@ namespace CASCLib
                     {
                         var folder = entry as CASCFolder;
 
-                        foreach (var file in GetFiles(folder.Entries.Select(kv => kv.Value)))
+                        foreach (var file in GetFiles(folder.Entries.Select(kv => kv.Value), filter: filter))
                         {
+                            if (wildcard != null && !wildcard.IsMatch(file.Name))
+                                continue;
                             yield return file;
                         }
                     }
