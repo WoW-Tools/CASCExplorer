@@ -74,9 +74,7 @@ namespace CASCExplorer
 
                 foreach (var file in installFiles)
                 {
-                    EncodingEntry enc;
-
-                    if (_casc.Encoding.GetEntry(file.MD5, out enc))
+                    if (_casc.Encoding.GetEntry(file.MD5, out EncodingEntry enc))
                         _casc.SaveFileTo(enc.Key, Path.Combine("data", build, "install_files"), file.Name);
 
                     progress.Report((int)(++numDone / (float)numFiles * 100));
@@ -145,9 +143,7 @@ namespace CASCExplorer
 
                                 int type = row.Value.GetField<byte>(12);
 
-                                List<int> ske_entries;
-
-                                if (!lookup.TryGetValue(row.Key, out ske_entries))
+                                if (!lookup.TryGetValue(row.Key, out List<int> ske_entries))
                                     continue;
 
                                 bool many = ske_entries.Count > 1;
@@ -156,7 +152,7 @@ namespace CASCExplorer
 
                                 foreach (var fid in ske_entries)
                                 {
-                                    idToName[fid] = "unknown\\sound\\" + name + (many ? "_" + (i + 1).ToString("D2") : "") + (type == 28 ? ".mp3" : ".ogg");
+                                    idToName[fid] = "unknown\\sound\\" + name + (many ? "_" + (i + 1).ToString("D2") : "") + "_" + fid + (type == 28 ? ".mp3" : ".ogg");
                                     i++;
                                 }
                             }
@@ -179,8 +175,7 @@ namespace CASCExplorer
                 {
                     CASCFile unknownFile = unknownEntry as CASCFile;
 
-                    string name;
-                    if (idToName.TryGetValue(wowRoot.GetFileDataIdByHash(unknownFile.Hash), out name))
+                    if (idToName.TryGetValue(wowRoot.GetFileDataIdByHash(unknownFile.Hash), out string name))
                         unknownFile.FullName = name;
                     else
                     {
@@ -259,9 +254,7 @@ namespace CASCExplorer
                 // Create nodes dynamically
                 foreach (var it in orderedEntries)
                 {
-                    CASCFolder entry = it.Value as CASCFolder;
-
-                    if (entry != null && node.Nodes[entry.Name] == null)
+                    if (it.Value is CASCFolder entry && node.Nodes[entry.Name] == null)
                     {
                         TreeNode newNode = node.Nodes.Add(entry.Name);
                         newNode.Tag = entry;
@@ -451,9 +444,7 @@ namespace CASCExplorer
 
                 if (rootInfosLocale.Any())
                 {
-                    EncodingEntry enc;
-
-                    if (_casc.Encoding.GetEntry(rootInfosLocale.First().MD5, out enc))
+                    if (_casc.Encoding.GetEntry(rootInfosLocale.First().MD5, out EncodingEntry enc))
                     {
                         size = enc.Size.ToString("N", sizeNumberFmt) ?? "0";
                     }
@@ -463,9 +454,7 @@ namespace CASCExplorer
 
                         if (_casc.Root is OwRootHandler)
                         {
-                            OWRootEntry rootEntry;
-
-                            if ((_casc.Root as OwRootHandler).GetEntry(entry.Hash, out rootEntry))
+                            if ((_casc.Root as OwRootHandler).GetEntry(entry.Hash, out OWRootEntry rootEntry))
                             {
                                 size = rootEntry.pkgIndexRec.Size.ToString("N", sizeNumberFmt) ?? "0";
                             }
@@ -484,9 +473,7 @@ namespace CASCExplorer
 
                     if (installInfos.Any())
                     {
-                        EncodingEntry enc;
-
-                        if (_casc.Encoding.GetEntry(installInfos.First().MD5, out enc))
+                        if (_casc.Encoding.GetEntry(installInfos.First().MD5, out EncodingEntry enc))
                         {
                             size = enc.Size.ToString("N", sizeNumberFmt) ?? "0";
 
@@ -602,13 +589,11 @@ namespace CASCExplorer
             if (_casc == null)
                 return;
 
-            EncodingEntry enc;
-
             _casc.SaveFileTo(_casc.Config.EncodingKey, ".", "encoding");
 
             //_casc.SaveFileTo(_casc.Config.PatchKey, ".", "patch");
 
-            if (_casc.Encoding.GetEntry(_casc.Config.RootMD5, out enc))
+            if (_casc.Encoding.GetEntry(_casc.Config.RootMD5, out EncodingEntry enc))
                 _casc.SaveFileTo(enc.Key, ".", "root");
 
             if (_casc.Encoding.GetEntry(_casc.Config.InstallMD5, out enc))
