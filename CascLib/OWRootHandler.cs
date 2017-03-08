@@ -116,9 +116,7 @@ namespace CASCExplorer
 
                     CASCFile.FileNames[apmNameHash] = name;
 
-                    EncodingEntry apmEnc;
-
-                    if (!casc.Encoding.GetEntry(apmMD5, out apmEnc))
+                    if (!casc.Encoding.GetEntry(apmMD5, out EncodingEntry apmEnc))
                         continue;
 
                     using (Stream apmStream = casc.OpenFile(apmEnc.Key))
@@ -133,7 +131,7 @@ namespace CASCExplorer
             APMNames.Clear();
         }
 
-        static ulong keyToTypeID(ulong key)
+        static ulong KeyToTypeID(ulong key)
         {
             var num = (key >> 48);
             num = (((num >> 1) & 0x55555555) | ((num & 0x55555555) << 1));
@@ -153,9 +151,7 @@ namespace CASCExplorer
 
         public override IEnumerable<RootEntry> GetAllEntries(ulong hash)
         {
-            OWRootEntry entry;
-
-            if (_rootData.TryGetValue(hash, out entry))
+            if (_rootData.TryGetValue(hash, out OWRootEntry entry))
                 yield return entry.baseEntry;
         }
 
@@ -235,7 +231,7 @@ namespace CASCExplorer
 
                     for (int k = 0; k < records.Length; k++)
                     {
-                        fakeName = string.Format("files/{0:X3}/{1:X12}.{0:X3}", keyToTypeID(records[k].Key), records[k].Key & 0xFFFFFFFFFFFF);
+                        fakeName = string.Format("files/{0:X3}/{1:X12}.{0:X3}", KeyToTypeID(records[k].Key), records[k].Key & 0xFFFFFFFFFFFF);
 
                         fileHash = Hasher.ComputeHash(fakeName);
                         //Logger.WriteLine("Adding package record: key {0:X16} hash {1} flags {2:X8}", fileHash, records[k].contentKey.ToHexString(), records[k].flags);
@@ -341,9 +337,7 @@ namespace CASCExplorer
                 {
                     packages[j] = reader.Read<APMPackage>();
 
-                    EncodingEntry pkgIndexEnc;
-
-                    if (!casc.Encoding.GetEntry(packages[j].indexContentKey, out pkgIndexEnc))
+                    if (!casc.Encoding.GetEntry(packages[j].indexContentKey, out EncodingEntry pkgIndexEnc))
                         throw new Exception("pkgIndexEnc missing");
 
                     using (Stream pkgIndexStream = casc.OpenFile(pkgIndexEnc.Key))

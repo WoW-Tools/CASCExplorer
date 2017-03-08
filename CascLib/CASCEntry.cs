@@ -36,8 +36,7 @@ namespace CASCExplorer
 
         public ICASCEntry GetEntry(string name)
         {
-            ICASCEntry entry;
-            Entries.TryGetValue(name, out entry);
+            Entries.TryGetValue(name, out ICASCEntry entry);
             return entry;
         }
 
@@ -141,8 +140,7 @@ namespace CASCExplorer
 
         public int GetSize(CASCHandler casc)
         {
-            EncodingEntry enc;
-            return casc.GetEncodingEntry(hash, out enc) ? enc.Size : 0;
+            return casc.GetEncodingEntry(hash, out EncodingEntry enc) ? enc.Size : 0;
         }
 
         public int CompareTo(ICASCEntry other, int col, CASCHandler casc)

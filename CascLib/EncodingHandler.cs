@@ -57,8 +57,10 @@ namespace CASCExplorer
                     int fileSize = stream.ReadInt32BE();
                     MD5Hash md5 = stream.Read<MD5Hash>();
 
-                    EncodingEntry entry = new EncodingEntry();
-                    entry.Size = fileSize;
+                    EncodingEntry entry = new EncodingEntry()
+                    {
+                        Size = fileSize
+                    };
 
                     // how do we handle multiple keys?
                     for (int ki = 0; ki < keysCount; ++ki)

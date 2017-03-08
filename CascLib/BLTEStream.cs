@@ -326,16 +326,16 @@ namespace CASCExplorer
             {
                 if (disposing)
                 {
-                    if (_stream != null)
-                        _stream.Dispose();
-                    if (_reader != null)
-                        _reader.Dispose();
+                    _stream?.Dispose();
+                    _reader?.Dispose();
+                    _memStream?.Dispose();
                 }
             }
             finally
             {
                 _stream = null;
                 _reader = null;
+                _memStream = null;
 
                 base.Dispose(disposing);
             }

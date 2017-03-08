@@ -75,11 +75,12 @@ namespace CASCExplorer
                     if (key.IsZeroed()) // wtf?
                         throw new Exception("key.IsZeroed()");
 
-                    IndexEntry entry = new IndexEntry();
-                    entry.Index = i;
-                    entry.Size = br.ReadInt32BE();
-                    entry.Offset = br.ReadInt32BE();
-
+                    IndexEntry entry = new IndexEntry()
+                    {
+                        Index = i,
+                        Size = br.ReadInt32BE(),
+                        Offset = br.ReadInt32BE()
+                    };
                     CDNIndexData.Add(key, entry);
                 }
             }
@@ -223,9 +224,7 @@ namespace CASCExplorer
 
         public IndexEntry GetIndexInfo(MD5Hash key)
         {
-            IndexEntry result;
-
-            if (!CDNIndexData.TryGetValue(key, out result))
+            if (!CDNIndexData.TryGetValue(key, out IndexEntry result))
                 Logger.WriteLine("CDNIndexHandler: missing index: {0}", key.ToHexString());
 
             return result;

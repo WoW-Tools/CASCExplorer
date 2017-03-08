@@ -16,11 +16,11 @@ namespace CASCExplorer
 
         public static D3RootEntry Read(int type, BinaryReader s)
         {
-            D3RootEntry e = new D3RootEntry();
-
-            e.Type = type;
-            e.MD5 = s.Read<MD5Hash>();
-
+            D3RootEntry e = new D3RootEntry()
+            {
+                Type = type,
+                MD5 = s.Read<MD5Hash>()
+            };
             if (type == 0 || type == 1) // has SNO id
             {
                 e.SNO = s.ReadInt32();
@@ -66,9 +66,7 @@ namespace CASCExplorer
                 var entries = new List<D3RootEntry>();
                 D3RootData[name] = entries;
 
-                EncodingEntry enc;
-
-                if (!casc.Encoding.GetEntry(md5, out enc))
+                if (!casc.Encoding.GetEntry(md5, out EncodingEntry enc))
                     continue;
 
                 using (BinaryReader s = new BinaryReader(casc.OpenFile(enc.Key)))
@@ -103,8 +101,7 @@ namespace CASCExplorer
             // Parse CoreTOC.dat
             var coreTocEntry = D3RootData["Base"].Find(e => e.Name == "CoreTOC.dat");
 
-            EncodingEntry enc1;
-            casc.Encoding.GetEntry(coreTocEntry.MD5, out enc1);
+            casc.Encoding.GetEntry(coreTocEntry.MD5, out EncodingEntry enc1);
 
             using (var file = casc.OpenFile(enc1.Key))
                 tocParser = new CoreTOCParser(file);
@@ -114,8 +111,7 @@ namespace CASCExplorer
             // Parse Packages.dat
             var pkgEntry = D3RootData["Base"].Find(e => e.Name == "Data_D3\\PC\\Misc\\Packages.dat");
 
-            EncodingEntry enc2;
-            casc.Encoding.GetEntry(pkgEntry.MD5, out enc2);
+            casc.Encoding.GetEntry(pkgEntry.MD5, out EncodingEntry enc2);
 
             using (var file = casc.OpenFile(enc2.Key))
                 pkgParser = new PackagesParser(file);
@@ -146,8 +142,7 @@ namespace CASCExplorer
 
         public override IEnumerable<RootEntry> GetAllEntries(ulong hash)
         {
-            List<RootEntry> result;
-            RootData.TryGetValue(hash, out result);
+            RootData.TryGetValue(hash, out List<RootEntry> result);
 
             if (result == null)
                 yield break;
@@ -201,12 +196,12 @@ namespace CASCExplorer
                     break;
             }
 
-            RootEntry entry = new RootEntry();
-            entry.MD5 = e.MD5;
+            RootEntry entry = new RootEntry()
+            {
+                MD5 = e.MD5
+            };
 
-            LocaleFlags locale;
-
-            if (Enum.TryParse(pkg, out locale))
+            if (Enum.TryParse(pkg, out LocaleFlags locale))
                 entry.LocaleFlags = locale;
             else
                 entry.LocaleFlags = LocaleFlags.All;
@@ -464,8 +459,7 @@ namespace CASCExplorer
 
         public SNOInfo GetSNO(int id)
         {
-            SNOInfo sno;
-            snoDic.TryGetValue(id, out sno);
+            snoDic.TryGetValue(id, out SNOInfo sno);
             return sno;
         }
     }
@@ -491,8 +485,7 @@ namespace CASCExplorer
 
         public string GetExtension(string partialName)
         {
-            string ext;
-            nameToExtDic.TryGetValue(partialName, out ext);
+            nameToExtDic.TryGetValue(partialName, out string ext);
             return ext;
         }
     }

@@ -129,8 +129,7 @@ namespace CASCExplorer
 
         public DB2Row GetRow(int index)
         {
-            DB2Row row;
-            m_index.TryGetValue(index, out row);
+            m_index.TryGetValue(index, out DB2Row row);
             return row;
         }
 

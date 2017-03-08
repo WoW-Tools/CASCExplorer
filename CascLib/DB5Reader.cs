@@ -163,9 +163,11 @@ namespace CASCExplorer
 
                 for (int i = 0; i < m_meta.Length; i++)
                 {
-                    m_meta[i] = new DB2Meta();
-                    m_meta[i].Bits = reader.ReadInt16();
-                    m_meta[i].Offset = reader.ReadInt16();
+                    m_meta[i] = new DB2Meta()
+                    {
+                        Bits = reader.ReadInt16(),
+                        Offset = reader.ReadInt16()
+                    };
                 }
 
                 DB5Row[] m_rows = new DB5Row[RecordsCount];

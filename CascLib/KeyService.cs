@@ -89,8 +89,7 @@ namespace CASCExplorer
 
         public static byte[] GetKey(ulong keyName)
         {
-            byte[] key;
-            keys.TryGetValue(keyName, out key);
+            keys.TryGetValue(keyName, out byte[] key);
             return key;
         }
     }

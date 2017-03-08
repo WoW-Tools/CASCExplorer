@@ -56,9 +56,7 @@ namespace CASCExplorer
 
                 if ((rootEntry.LocaleFlags == locale || (rootEntry.LocaleFlags & locale) != LocaleFlags.None) && (rootEntry.ContentFlags & ContentFlags.LowViolence) == ContentFlags.None)
                 {
-                    EncodingEntry enc;
-
-                    if (EncodingHandler.GetEntry(rootEntry.MD5, out enc))
+                    if (EncodingHandler.GetEntry(rootEntry.MD5, out EncodingEntry enc))
                     {
                         if (!HashToKey.ContainsKey(entry.Key))
                         {
@@ -162,9 +160,7 @@ namespace CASCExplorer
 
         public override Stream OpenFile(int filedata)
         {
-            ulong hash;
-
-            if (FileDataIdToHash.TryGetValue(filedata, out hash))
+            if (FileDataIdToHash.TryGetValue(filedata, out ulong hash))
                 return OpenFile(hash);
 
             return null;
@@ -174,9 +170,7 @@ namespace CASCExplorer
 
         public override Stream OpenFile(ulong hash)
         {
-            MD5Hash key;
-
-            if (HashToKey.TryGetValue(hash, out key))
+            if (HashToKey.TryGetValue(hash, out MD5Hash key))
                 return OpenFile(key);
 
             return null;
@@ -184,9 +178,7 @@ namespace CASCExplorer
 
         public override void SaveFileTo(ulong hash, string extractPath, string fullName)
         {
-            MD5Hash key;
-
-            if (HashToKey.TryGetValue(hash, out key))
+            if (HashToKey.TryGetValue(hash, out MD5Hash key))
             {
                 SaveFileTo(key, extractPath, fullName);
                 return;

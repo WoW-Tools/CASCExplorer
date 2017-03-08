@@ -88,8 +88,7 @@ namespace CASCExplorer
 
         public DownloadEntry GetEntry(MD5Hash key)
         {
-            DownloadEntry entry;
-            DownloadData.TryGetValue(key, out entry);
+            DownloadData.TryGetValue(key, out DownloadEntry entry);
 
             if (entry != null && entry.Tags == null)
                 entry.Tags = Tags.Where(kv => kv.Value.Bits[entry.Index]);

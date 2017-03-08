@@ -81,8 +81,7 @@ namespace CASCExplorer
         {
             get
             {
-                List<string> ret;
-                Data.TryGetValue(key, out ret);
+                Data.TryGetValue(key, out List<string> ret);
                 return ret;
             }
         }

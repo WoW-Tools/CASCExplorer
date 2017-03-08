@@ -207,8 +207,7 @@ namespace CASCExplorer
 
         public DB3Row GetRow(int index)
         {
-            DB3Row row;
-            m_index.TryGetValue(index, out row);
+            m_index.TryGetValue(index, out DB3Row row);
             return row;
         }
 
