@@ -19,4 +19,4 @@ cd CASCExplorer
 git submodule update --init --recursive
 ```
 
-Use Visual Studio to build it once you have all dependencies.
+Use Visual Studio 2017 to build it once you have all dependencies.

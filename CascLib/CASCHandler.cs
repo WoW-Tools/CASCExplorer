@@ -139,9 +139,7 @@ namespace CASCExplorer
 
         public override Stream OpenFile(int fileDataId)
         {
-            WowRootHandler rh = Root as WowRootHandler;
-
-            if (rh != null)
+            if (Root is WowRootHandler rh)
                 return OpenFile(rh.GetHashByFileDataId(fileDataId));
 
             if (CASCConfig.ThrowOnFileNotFound)
@@ -153,16 +151,12 @@ namespace CASCExplorer
 
         public override Stream OpenFile(ulong hash)
         {
-            EncodingEntry encInfo;
-
-            if (GetEncodingEntry(hash, out encInfo))
+            if (GetEncodingEntry(hash, out EncodingEntry encInfo))
                 return OpenFile(encInfo.Key);
 
             if (RootHandler is OwRootHandler)
             {
-                OWRootEntry entry;
-
-                if ((RootHandler as OwRootHandler).GetEntry(hash, out entry))
+                if ((RootHandler as OwRootHandler).GetEntry(hash, out OWRootEntry entry))
                 {
                     if ((entry.baseEntry.ContentFlags & ContentFlags.Bundle) != ContentFlags.None)
                     {
@@ -189,9 +183,7 @@ namespace CASCExplorer
 
         public override void SaveFileTo(ulong hash, string extractPath, string fullName)
         {
-            EncodingEntry encInfo;
-
-            if (GetEncodingEntry(hash, out encInfo))
+            if (GetEncodingEntry(hash, out EncodingEntry encInfo))
             {
                 SaveFileTo(encInfo.Key, extractPath, fullName);
                 return;
@@ -199,9 +191,7 @@ namespace CASCExplorer
 
             if (RootHandler is OwRootHandler)
             {
-                OWRootEntry entry;
-
-                if ((RootHandler as OwRootHandler).GetEntry(hash, out entry))
+                if ((RootHandler as OwRootHandler).GetEntry(hash, out OWRootEntry entry))
                 {
                     if ((entry.baseEntry.ContentFlags & ContentFlags.Bundle) != ContentFlags.None)
                     {
