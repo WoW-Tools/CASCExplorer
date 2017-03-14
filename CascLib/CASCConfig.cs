@@ -18,12 +18,9 @@ namespace CASCExplorer
     {
         private readonly List<Dictionary<string, string>> Data = new List<Dictionary<string, string>>();
 
-        public int Count { get { return Data.Count; } }
+        public int Count => Data.Count;
 
-        public Dictionary<string, string> this[int index]
-        {
-            get { return Data[index]; }
-        }
+        public Dictionary<string, string> this[int index] => Data[index];
 
         public static VerBarConfig ReadVerBarConfig(Stream stream)
         {
@@ -34,11 +31,12 @@ namespace CASCExplorer
         public static VerBarConfig ReadVerBarConfig(TextReader reader)
         {
             var result = new VerBarConfig();
-            string line;
 
             int lineNum = 0;
 
             string[] fields = null;
+
+            string line;
 
             while ((line = reader.ReadLine()) != null)
             {
@@ -280,70 +278,31 @@ namespace CASCExplorer
 
         public string Product { get; private set; }
 
-        public MD5Hash RootMD5
-        {
-            get { return _Builds[ActiveBuild]["root"][0].ToByteArray().ToMD5(); }
-        }
+        public MD5Hash RootMD5 => _Builds[ActiveBuild]["root"][0].ToByteArray().ToMD5();
 
-        public MD5Hash InstallMD5
-        {
-            get { return _Builds[ActiveBuild]["install"][0].ToByteArray().ToMD5(); }
-        }
+        public MD5Hash InstallMD5 => _Builds[ActiveBuild]["install"][0].ToByteArray().ToMD5();
 
-        public string InstallSize
-        {
-            get { return _Builds[ActiveBuild]["install-size"][0]; }
-        }
+        public string InstallSize => _Builds[ActiveBuild]["install-size"][0];
 
-        public MD5Hash DownloadMD5
-        {
-            get { return _Builds[ActiveBuild]["download"][0].ToByteArray().ToMD5(); }
-        }
+        public MD5Hash DownloadMD5 => _Builds[ActiveBuild]["download"][0].ToByteArray().ToMD5();
 
-        public string DownloadSize
-        {
-            get { return _Builds[ActiveBuild]["download-size"][0]; }
-        }
+        public string DownloadSize => _Builds[ActiveBuild]["download-size"][0];
 
-        public MD5Hash PartialPriorityMD5
-        {
-            get { return _Builds[ActiveBuild]["partial-priority"][0].ToByteArray().ToMD5(); }
-        }
+        public MD5Hash PartialPriorityMD5 => _Builds[ActiveBuild]["partial-priority"][0].ToByteArray().ToMD5();
 
-        public string PartialPrioritySize
-        {
-            get { return _Builds[ActiveBuild]["partial-priority-size"][0]; }
-        }
+        public string PartialPrioritySize => _Builds[ActiveBuild]["partial-priority-size"][0];
 
-        public MD5Hash EncodingMD5
-        {
-            get { return _Builds[ActiveBuild]["encoding"][0].ToByteArray().ToMD5(); }
-        }
+        public MD5Hash EncodingMD5 => _Builds[ActiveBuild]["encoding"][0].ToByteArray().ToMD5();
 
-        public MD5Hash EncodingKey
-        {
-            get { return _Builds[ActiveBuild]["encoding"][1].ToByteArray().ToMD5(); }
-        }
+        public MD5Hash EncodingKey => _Builds[ActiveBuild]["encoding"][1].ToByteArray().ToMD5();
 
-        public string EncodingSize
-        {
-            get { return _Builds[ActiveBuild]["encoding-size"][0]; }
-        }
+        public string EncodingSize => _Builds[ActiveBuild]["encoding-size"][0];
 
-        public MD5Hash PatchKey
-        {
-            get { return _Builds[ActiveBuild]["patch"][0].ToByteArray().ToMD5(); }
-        }
+        public MD5Hash PatchKey => _Builds[ActiveBuild]["patch"][0].ToByteArray().ToMD5();
 
-        public string PatchSize
-        {
-            get { return _Builds[ActiveBuild]["patch-size"][0]; }
-        }
+        public string PatchSize => _Builds[ActiveBuild]["patch-size"][0];
 
-        public string BuildUID
-        {
-            get { return _Builds[ActiveBuild]["build-uid"][0]; }
-        }
+        public string BuildUID => _Builds[ActiveBuild]["build-uid"][0];
 
         public string CDNHost
         {
@@ -365,20 +324,7 @@ namespace CASCExplorer
             }
         }
 
-        public string CDNPath
-        {
-            get
-            {
-                if (OnlineMode)
-                {
-                    return _CDNData[0]["Path"]; // use first
-                }
-                else
-                {
-                    return _BuildInfo[0]["CDNPath"];
-                }
-            }
-        }
+        public string CDNPath => OnlineMode ? _CDNData[0]["Path"] : _BuildInfo[0]["CDNPath"];
 
         public string CDNUrl
         {
@@ -403,29 +349,14 @@ namespace CASCExplorer
             }
         }
 
-        public List<string> Archives
-        {
-            get { return _CDNConfig["archives"]; }
-        }
+        public List<string> Archives => _CDNConfig["archives"];
 
-        public string ArchiveGroup
-        {
-            get { return _CDNConfig["archive-group"][0]; }
-        }
+        public string ArchiveGroup => _CDNConfig["archive-group"][0];
 
-        public List<string> PatchArchives
-        {
-            get { return _CDNConfig["patch-archives"]; }
-        }
+        public List<string> PatchArchives => _CDNConfig["patch-archives"];
 
-        public string PatchArchiveGroup
-        {
-            get { return _CDNConfig["patch-archive-group"][0]; }
-        }
+        public string PatchArchiveGroup => _CDNConfig["patch-archive-group"][0];
 
-        public List<KeyValueConfig> Builds
-        {
-            get { return _Builds; }
-        }
+        public List<KeyValueConfig> Builds => _Builds;
     }
 }

@@ -452,9 +452,9 @@ namespace CASCExplorer
                     {
                         size = "NYI";
 
-                        if (_casc.Root is OwRootHandler)
+                        if (_casc.Root is OwRootHandler owRoot)
                         {
-                            if ((_casc.Root as OwRootHandler).GetEntry(entry.Hash, out OWRootEntry rootEntry))
+                            if (owRoot.GetEntry(entry.Hash, out OWRootEntry rootEntry))
                             {
                                 size = rootEntry.pkgIndexRec.Size.ToString("N", sizeNumberFmt) ?? "0";
                             }
@@ -555,12 +555,14 @@ namespace CASCExplorer
 
         public void ExportListFile()
         {
+            WowRootHandler wowRoot = CASC.Root as WowRootHandler;
+
             using (StreamWriter sw = new StreamWriter("listfile_export.txt"))
             {
-                foreach (var file in CASCFolder.GetFiles(_root.Entries.Select(kv => kv.Value), null, true).OrderBy(f => f.FullName, StringComparer.OrdinalIgnoreCase))
+                foreach (var file in CASCFile.FileNames.OrderBy(f => f.Value, StringComparer.OrdinalIgnoreCase))
                 {
-                    if (CASC.FileExists(file.Hash))
-                        sw.WriteLine(file.FullName);
+                    if (CASC.FileExists(file.Key) && (wowRoot == null || !wowRoot.IsUnknownFile(file.Key)))
+                        sw.WriteLine(file.Value);
                 }
 
                 //var wr = CASC.Root as WowRootHandler;

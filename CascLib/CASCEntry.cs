@@ -24,15 +24,9 @@ namespace CASCExplorer
             _name = name;
         }
 
-        public string Name
-        {
-            get { return _name; }
-        }
+        public string Name => _name;
 
-        public ulong Hash
-        {
-            get { return 0; }
-        }
+        public ulong Hash => 0;
 
         public ICASCEntry GetEntry(string name)
         {
@@ -48,9 +42,9 @@ namespace CASCExplorer
                 {
                     var entry = entries.ElementAt(index);
 
-                    if (entry is CASCFile)
+                    if (entry is CASCFile file1)
                     {
-                        yield return entry as CASCFile;
+                        yield return file1;
                     }
                     else
                     {
@@ -70,9 +64,9 @@ namespace CASCExplorer
             {
                 foreach (var entry in entries)
                 {
-                    if (entry is CASCFile)
+                    if (entry is CASCFile file1)
                     {
-                        yield return entry as CASCFile;
+                        yield return file1;
                     }
                     else
                     {
@@ -122,26 +116,17 @@ namespace CASCExplorer
             this.hash = hash;
         }
 
-        public string Name
-        {
-            get { return Path.GetFileName(FullName); }
-        }
+        public string Name => Path.GetFileName(FullName);
 
         public string FullName
         {
-            get { return FileNames[hash]; }
-            set { FileNames[hash] = value; }
+            get => FileNames[hash];
+            set => FileNames[hash] = value;
         }
 
-        public ulong Hash
-        {
-            get { return hash; }
-        }
+        public ulong Hash => hash;
 
-        public int GetSize(CASCHandler casc)
-        {
-            return casc.GetEncodingEntry(hash, out EncodingEntry enc) ? enc.Size : 0;
-        }
+        public int GetSize(CASCHandler casc) => casc.GetEncodingEntry(hash, out EncodingEntry enc) ? enc.Size : 0;
 
         public int CompareTo(ICASCEntry other, int col, CASCHandler casc)
         {

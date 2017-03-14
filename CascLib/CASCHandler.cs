@@ -108,12 +108,9 @@ namespace CASCExplorer
 
         public override bool FileExists(int fileDataId)
         {
-            WowRootHandler rh = Root as WowRootHandler;
-
-            if (rh == null)
-                return false;
-
-            return FileExists(rh.GetHashByFileDataId(fileDataId));
+            if (Root is WowRootHandler rh)
+                return FileExists(rh.GetHashByFileDataId(fileDataId));
+            return false;
         }
 
         public override bool FileExists(string file) => FileExists(Hasher.ComputeHash(file));
@@ -154,9 +151,9 @@ namespace CASCExplorer
             if (GetEncodingEntry(hash, out EncodingEntry encInfo))
                 return OpenFile(encInfo.Key);
 
-            if (RootHandler is OwRootHandler)
+            if (RootHandler is OwRootHandler owRoot)
             {
-                if ((RootHandler as OwRootHandler).GetEntry(hash, out OWRootEntry entry))
+                if (owRoot.GetEntry(hash, out OWRootEntry entry))
                 {
                     if ((entry.baseEntry.ContentFlags & ContentFlags.Bundle) != ContentFlags.None)
                     {
@@ -189,9 +186,9 @@ namespace CASCExplorer
                 return;
             }
 
-            if (RootHandler is OwRootHandler)
+            if (RootHandler is OwRootHandler owRoot)
             {
-                if ((RootHandler as OwRootHandler).GetEntry(hash, out OWRootEntry entry))
+                if (owRoot.GetEntry(hash, out OWRootEntry entry))
                 {
                     if ((entry.baseEntry.ContentFlags & ContentFlags.Bundle) != ContentFlags.None)
                     {

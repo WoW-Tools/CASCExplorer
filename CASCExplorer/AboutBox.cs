@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Reflection;
 using System.Windows.Forms;
 
@@ -10,13 +9,13 @@ namespace CASCExplorer
         public AboutBox()
         {
             InitializeComponent();
-            this.Text = string.Format("About {0}", AssemblyTitle);
-            this.labelProductName.Text = AssemblyProduct;
-            this.labelVersion.Text = string.Format("Version {0}", AssemblyVersion);
-            this.labelCopyright.Text = AssemblyCopyright;
+            Text = string.Format("About {0}", AssemblyTitle);
+            labelProductName.Text = AssemblyProduct;
+            labelVersion.Text = string.Format("Version {0}", AssemblyVersion);
+            labelCopyright.Text = AssemblyCopyright;
             var link = new LinkLabel.Link {LinkData = Properties.Resources.donateURL};
-            this.labelDonate.Links.Add(link);
-            this.textBoxDescription.Text = AssemblyDescription;
+            labelDonate.Links.Add(link);
+            textBoxDescription.Text = AssemblyDescription;
         }
 
         #region Assembly Attribute Accessors

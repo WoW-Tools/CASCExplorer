@@ -47,8 +47,10 @@ namespace CASCExplorer
                 if (locale == "None")
                     continue;
 
-                var item = new ToolStripMenuItem(locale);
-                item.Checked = Settings.Default.LocaleFlags.ToString() == locale;
+                var item = new ToolStripMenuItem(locale)
+                {
+                    Checked = Settings.Default.LocaleFlags.ToString() == locale
+                };
                 localeFlagsToolStripMenuItem.DropDownItems.Add(item);
             }
 
@@ -60,8 +62,10 @@ namespace CASCExplorer
 
                 foreach (string game in onlineStorageList)
                 {
-                    var item = new ToolStripMenuItem(onlineStorageList[game]);
-                    item.Tag = game;
+                    var item = new ToolStripMenuItem(onlineStorageList[game])
+                    {
+                        Tag = game
+                    };
                     openOnlineStorageToolStripMenuItem.DropDownItems.Add(item);
                 }
             }

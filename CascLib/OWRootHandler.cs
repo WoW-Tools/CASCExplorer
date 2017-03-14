@@ -103,8 +103,9 @@ namespace CASCExplorer
                 if (Path.GetExtension(name) == ".apm" && name.Contains("RDEV"))
                 {
                     APMNames.Add(Path.GetFileNameWithoutExtension(name));
-                    if(!name.Contains("L"+LanguageScan)) {
-                      continue;
+                    if (!name.Contains("L" + LanguageScan))
+                    {
+                        continue;
                     }
                     // add apm file for dev purposes
                     ulong apmNameHash = Hasher.ComputeHash(name);

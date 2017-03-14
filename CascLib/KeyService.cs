@@ -82,10 +82,7 @@ namespace CASCExplorer
 
         private static Salsa20 salsa = new Salsa20();
 
-        public static Salsa20 SalsaInstance
-        {
-            get { return salsa; }
-        }
+        public static Salsa20 SalsaInstance => salsa;
 
         public static byte[] GetKey(ulong keyName)
         {

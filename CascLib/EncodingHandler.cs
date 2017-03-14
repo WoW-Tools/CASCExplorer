@@ -16,10 +16,7 @@ namespace CASCExplorer
 
         private const int CHUNK_SIZE = 4096;
 
-        public int Count
-        {
-            get { return EncodingData.Count; }
-        }
+        public int Count => EncodingData.Count;
 
         public EncodingHandler(BinaryReader stream, BackgroundWorkerEx worker)
         {
@@ -122,10 +119,7 @@ namespace CASCExplorer
             }
         }
 
-        public bool GetEntry(MD5Hash md5, out EncodingEntry enc)
-        {
-            return EncodingData.TryGetValue(md5, out enc);
-        }
+        public bool GetEntry(MD5Hash md5, out EncodingEntry enc) => EncodingData.TryGetValue(md5, out enc);
 
         public void Clear()
         {

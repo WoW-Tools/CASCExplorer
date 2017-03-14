@@ -148,8 +148,8 @@ namespace CASCExplorer
         {
             foreach (var entry in folder.Entries)
             {
-                if (entry.Value is CASCFile)
-                    ScanFile(entry.Value as CASCFile);
+                if (entry.Value is CASCFile file)
+                    ScanFile(file);
                 else
                     ScanFolder(entry.Value as CASCFolder);
             }
