@@ -33,6 +33,12 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.folderTree = new System.Windows.Forms.TreeView();
             this.iconsList = new System.Windows.Forms.ImageList(this.components);
+            this.fileList = new CASCExplorer.NoFlickerListView();
+            this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.extractToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.copyNameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -63,18 +69,12 @@
             this.exportListfileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStrip2 = new System.Windows.Forms.ToolStrip();
+            this.openStorageToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.filterToolStripLabel = new System.Windows.Forms.ToolStripLabel();
             this.filterToolStripTextBox = new System.Windows.Forms.ToolStripTextBox();
             this.storageFolderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
-            this.toolStrip2 = new System.Windows.Forms.ToolStrip();
-            this.openStorageToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.fileList = new CASCExplorer.NoFlickerListView();
-            this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -86,8 +86,8 @@
             this.toolStripContainer1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
-            this.toolStrip1.SuspendLayout();
             this.toolStrip2.SuspendLayout();
+            this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // splitContainer1
@@ -128,6 +128,59 @@
             this.iconsList.ColorDepth = System.Windows.Forms.ColorDepth.Depth32Bit;
             this.iconsList.ImageSize = new System.Drawing.Size(15, 15);
             this.iconsList.TransparentColor = System.Drawing.Color.Transparent;
+            // 
+            // fileList
+            // 
+            this.fileList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader1,
+            this.columnHeader2,
+            this.columnHeader3,
+            this.columnHeader5,
+            this.columnHeader4});
+            this.fileList.ContextMenuStrip = this.contextMenuStrip1;
+            this.fileList.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.fileList.FullRowSelect = true;
+            this.fileList.HideSelection = false;
+            this.fileList.Location = new System.Drawing.Point(0, 0);
+            this.fileList.Name = "fileList";
+            this.fileList.SelectedIndex = -1;
+            this.fileList.Size = new System.Drawing.Size(622, 466);
+            this.fileList.SmallImageList = this.iconsList;
+            this.fileList.Sorting = System.Windows.Forms.SortOrder.Ascending;
+            this.fileList.TabIndex = 0;
+            this.fileList.UseCompatibleStateImageBehavior = false;
+            this.fileList.View = System.Windows.Forms.View.Details;
+            this.fileList.VirtualMode = true;
+            this.fileList.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listView1_ColumnClick);
+            this.fileList.RetrieveVirtualItem += new System.Windows.Forms.RetrieveVirtualItemEventHandler(this.listView1_RetrieveVirtualItem);
+            this.fileList.SearchForVirtualItem += new System.Windows.Forms.SearchForVirtualItemEventHandler(this.fileList_SearchForVirtualItem);
+            this.fileList.KeyDown += new System.Windows.Forms.KeyEventHandler(this.listView1_KeyDown);
+            this.fileList.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listView1_MouseDoubleClick);
+            // 
+            // columnHeader1
+            // 
+            this.columnHeader1.Text = "File Name";
+            this.columnHeader1.Width = 250;
+            // 
+            // columnHeader2
+            // 
+            this.columnHeader2.Text = "Type";
+            // 
+            // columnHeader3
+            // 
+            this.columnHeader3.Text = "Locale Flags";
+            this.columnHeader3.Width = 100;
+            // 
+            // columnHeader5
+            // 
+            this.columnHeader5.Text = "Content Flags";
+            this.columnHeader5.Width = 100;
+            // 
+            // columnHeader4
+            // 
+            this.columnHeader4.Text = "Size";
+            this.columnHeader4.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.columnHeader4.Width = 80;
             // 
             // contextMenuStrip1
             // 
@@ -282,7 +335,7 @@
             // findToolStripMenuItem
             // 
             this.findToolStripMenuItem.Name = "findToolStripMenuItem";
-            this.findToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.findToolStripMenuItem.Size = new System.Drawing.Size(106, 22);
             this.findToolStripMenuItem.Text = "Find...";
             this.findToolStripMenuItem.Click += new System.EventHandler(this.findToolStripMenuItem_Click);
             // 
@@ -299,7 +352,7 @@
             // 
             this.localeFlagsToolStripMenuItem.Enabled = false;
             this.localeFlagsToolStripMenuItem.Name = "localeFlagsToolStripMenuItem";
-            this.localeFlagsToolStripMenuItem.Size = new System.Drawing.Size(108, 22);
+            this.localeFlagsToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
             this.localeFlagsToolStripMenuItem.Text = "Locale";
             this.localeFlagsToolStripMenuItem.DropDownItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.localeToolStripMenuItem_DropDownItemClicked);
             // 
@@ -307,7 +360,7 @@
             // 
             this.useLVToolStripMenuItem.Enabled = false;
             this.useLVToolStripMenuItem.Name = "useLVToolStripMenuItem";
-            this.useLVToolStripMenuItem.Size = new System.Drawing.Size(108, 22);
+            this.useLVToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
             this.useLVToolStripMenuItem.Text = "Use LV";
             this.useLVToolStripMenuItem.Click += new System.EventHandler(this.contentFlagsToolStripMenuItem_Click);
             // 
@@ -322,7 +375,7 @@
             this.bruteforceNamesToolStripMenuItem,
             this.exportListfileToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
+            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
             // 
             // scanFilesToolStripMenuItem
@@ -395,6 +448,26 @@
             this.aboutToolStripMenuItem.Text = "About...";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
+            // toolStrip2
+            // 
+            this.toolStrip2.Dock = System.Windows.Forms.DockStyle.None;
+            this.toolStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.openStorageToolStripButton});
+            this.toolStrip2.Location = new System.Drawing.Point(3, 24);
+            this.toolStrip2.Name = "toolStrip2";
+            this.toolStrip2.Size = new System.Drawing.Size(35, 25);
+            this.toolStrip2.TabIndex = 2;
+            // 
+            // openStorageToolStripButton
+            // 
+            this.openStorageToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.openStorageToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("openStorageToolStripButton.Image")));
+            this.openStorageToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.openStorageToolStripButton.Name = "openStorageToolStripButton";
+            this.openStorageToolStripButton.Size = new System.Drawing.Size(23, 22);
+            this.openStorageToolStripButton.Text = "&Open Storage";
+            this.openStorageToolStripButton.Click += new System.EventHandler(this.openStorageToolStripButton_Click);
+            // 
             // toolStrip1
             // 
             this.toolStrip1.Dock = System.Windows.Forms.DockStyle.None;
@@ -419,85 +492,13 @@
             this.filterToolStripTextBox.Text = "*";
             this.filterToolStripTextBox.TextChanged += new System.EventHandler(this.filterToolStripTextBox_TextChanged);
             // 
-            // toolStrip2
-            // 
-            this.toolStrip2.Dock = System.Windows.Forms.DockStyle.None;
-            this.toolStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.openStorageToolStripButton});
-            this.toolStrip2.Location = new System.Drawing.Point(3, 24);
-            this.toolStrip2.Name = "toolStrip2";
-            this.toolStrip2.Size = new System.Drawing.Size(35, 25);
-            this.toolStrip2.TabIndex = 2;
-            // 
-            // openStorageToolStripButton
-            // 
-            this.openStorageToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.openStorageToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("openStorageToolStripButton.Image")));
-            this.openStorageToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.openStorageToolStripButton.Name = "openStorageToolStripButton";
-            this.openStorageToolStripButton.Size = new System.Drawing.Size(23, 22);
-            this.openStorageToolStripButton.Text = "&Open Storage";
-            this.openStorageToolStripButton.Click += new System.EventHandler(this.openStorageToolStripButton_Click);
-            // 
-            // fileList
-            // 
-            this.fileList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader1,
-            this.columnHeader2,
-            this.columnHeader3,
-            this.columnHeader5,
-            this.columnHeader4});
-            this.fileList.ContextMenuStrip = this.contextMenuStrip1;
-            this.fileList.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.fileList.FullRowSelect = true;
-            this.fileList.HideSelection = false;
-            this.fileList.Location = new System.Drawing.Point(0, 0);
-            this.fileList.Name = "fileList";
-            this.fileList.SelectedIndex = -1;
-            this.fileList.Size = new System.Drawing.Size(622, 466);
-            this.fileList.SmallImageList = this.iconsList;
-            this.fileList.Sorting = System.Windows.Forms.SortOrder.Ascending;
-            this.fileList.TabIndex = 0;
-            this.fileList.UseCompatibleStateImageBehavior = false;
-            this.fileList.View = System.Windows.Forms.View.Details;
-            this.fileList.VirtualMode = true;
-            this.fileList.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listView1_ColumnClick);
-            this.fileList.RetrieveVirtualItem += new System.Windows.Forms.RetrieveVirtualItemEventHandler(this.listView1_RetrieveVirtualItem);
-            this.fileList.SearchForVirtualItem += new System.Windows.Forms.SearchForVirtualItemEventHandler(this.fileList_SearchForVirtualItem);
-            this.fileList.KeyDown += new System.Windows.Forms.KeyEventHandler(this.listView1_KeyDown);
-            this.fileList.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listView1_MouseDoubleClick);
-            // 
-            // columnHeader1
-            // 
-            this.columnHeader1.Text = "File Name";
-            this.columnHeader1.Width = 250;
-            // 
-            // columnHeader2
-            // 
-            this.columnHeader2.Text = "Type";
-            // 
-            // columnHeader3
-            // 
-            this.columnHeader3.Text = "Locale Flags";
-            this.columnHeader3.Width = 100;
-            // 
-            // columnHeader5
-            // 
-            this.columnHeader5.Text = "Content Flags";
-            this.columnHeader5.Width = 100;
-            // 
-            // columnHeader4
-            // 
-            this.columnHeader4.Text = "Size";
-            this.columnHeader4.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.columnHeader4.Width = 80;
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(838, 537);
             this.Controls.Add(this.toolStripContainer1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
             this.Text = "CASC Explorer";
@@ -518,10 +519,10 @@
             this.statusStrip1.PerformLayout();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
-            this.toolStrip1.ResumeLayout(false);
-            this.toolStrip1.PerformLayout();
             this.toolStrip2.ResumeLayout(false);
             this.toolStrip2.PerformLayout();
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
             this.ResumeLayout(false);
 
         }
