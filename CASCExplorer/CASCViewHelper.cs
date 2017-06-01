@@ -1,10 +1,13 @@
 ﻿using CASCExplorer.Properties;
-using SereniaBLPLib;
+using CASCExplorer.ViewPlugin;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
+using System.ComponentModel.Composition.Hosting;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -30,6 +33,18 @@ namespace CASCExplorer
             NumberGroupSeparator = " "
         };
 
+        private AggregateCatalog m_catalog;
+
+        [ImportMany(AllowRecomposition = true)]
+        private List<IPreviw> ViewPlugins { get; set; }
+
+        [Import(AllowRecomposition = true)]
+        private IPreviwDefault DefaultPreviewPlugin { get; set; }
+
+        private Control m_currentControl;
+
+        public Panel ViewPanel { get; set; }
+
         public event OnStorageChangedDelegate OnStorageChanged;
         public event OnCleanupDelegate OnCleanup;
 
@@ -40,6 +55,28 @@ namespace CASCExplorer
         public CASCFolder CurrentFolder => _currentFolder;
 
         public List<ICASCEntry> DisplayedEntries => _displayedEntries;
+
+        internal CASCViewHelper()
+        {
+            ComposePlugins();
+        }
+
+        private void ComposePlugins()
+        {
+            m_catalog = new AggregateCatalog();
+            m_catalog.Catalogs.Add(new AssemblyCatalog(Assembly.GetExecutingAssembly()));
+            m_catalog.Catalogs.Add(new DirectoryCatalog(Application.StartupPath));
+
+            try
+            {
+                var container = new CompositionContainer(m_catalog);
+                container.ComposeParts(this);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
 
         public void ExtractFiles(NoFlickerListView filesList)
         {
@@ -348,7 +385,7 @@ namespace CASCExplorer
 
         public void PreviewFile(NoFlickerListView fileList)
         {
-            if (_currentFolder == null)
+            if (_currentFolder == null || ViewPanel == null || ViewPlugins == null)
                 return;
 
             if (!fileList.HasSingleSelection)
@@ -356,72 +393,50 @@ namespace CASCExplorer
 
             var file = _displayedEntries[fileList.SelectedIndex] as CASCFile;
 
+            if (file == null)
+                return;
+
             var extension = Path.GetExtension(file.Name);
 
-            if (extension != null)
+            foreach (var plugin in ViewPlugins)
             {
-                switch (extension.ToLower())
+                if (plugin.CheckContent(extension))
                 {
-                    case ".blp":
+                    using (var stream = _casc.OpenFile(file.Hash))
+                    {
+                        // todo: use Task
+                        var control = plugin.Show(stream);
+                        if (m_currentControl != control)
                         {
-                            PreviewBlp(file);
-                            break;
+                            ViewPanel.Controls.Clear();
+                            ViewPanel.Controls.Add(control);
+                            control.Dock = DockStyle.Fill;
+                            m_currentControl = control;
                         }
-                    case ".txt":
-                    case ".ini":
-                    case ".wtf":
-                    case ".lua":
-                    case ".toc":
-                    case ".xml":
-                    case ".htm":
-                    case ".html":
-                    case ".lst":
-                        {
-                            PreviewText(file);
-                            break;
-                        }
-                    //case ".wav":
-                    //case ".ogg":
-                    //    {
-                    //        PreviewSound(file);
-                    //        break;
-                    //    }
-                    default:
-                        {
-                            MessageBox.Show(string.Format("Preview of {0} is not supported yet", extension), "Not supported file");
-                            break;
-                        }
+                    }
+                    return;
                 }
             }
-        }
 
-        private void PreviewText(CASCFile file)
-        {
-            using (var stream = _casc.OpenFile(file.Hash))
+            if (DefaultPreviewPlugin != null)
             {
-                var text = new StreamReader(stream).ReadToEnd();
-                var form = new Form { FormBorderStyle = FormBorderStyle.SizableToolWindow, StartPosition = FormStartPosition.CenterParent };
-                form.Controls.Add(new TextBox
+                using (var stream = _casc.OpenFile(file.Hash))
                 {
-                    Multiline = true,
-                    ReadOnly = true,
-                    Dock = DockStyle.Fill,
-                    Text = text,
-                    ScrollBars = ScrollBars.Both
-                });
-                form.Show();
+                    // todo: use Task
+                    var control = DefaultPreviewPlugin.Show(stream);
+                    if (m_currentControl != control)
+                    {
+                        ViewPanel.Controls.Clear();
+                        ViewPanel.Controls.Add(control);
+                        control.Dock = DockStyle.Fill;
+                        m_currentControl = control;
+                    }
+                }
+                return;
             }
-        }
 
-        private void PreviewBlp(CASCFile file)
-        {
-            using (var stream = _casc.OpenFile(file.Hash))
-            {
-                var blp = new BlpFile(stream);
-                var bitmap = blp.GetBitmap(0);
-                var form = new ImagePreviewForm(bitmap);
-                form.Show();
-            }
+            m_currentControl = null;
+            ViewPanel.Controls.Clear();
         }
 
         public void CreateListViewItem(RetrieveVirtualItemEventArgs e)

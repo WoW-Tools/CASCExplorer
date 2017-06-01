@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CascLib", "CascLib\CascLib.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SereniaBLPLib", "SereniaBLPLib\SereniaBLPLib\SereniaBLPLib.csproj", "{4ED9F877-A9BB-470F-B35C-694147472080}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CASCExplorer.ViewPlugin", "CASCExplorer.ViewPlugin\CASCExplorer.ViewPlugin.csproj", "{63C32AC8-2EE2-4DB7-99C5-84FD815AADC3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{4ED9F877-A9BB-470F-B35C-694147472080}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4ED9F877-A9BB-470F-B35C-694147472080}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4ED9F877-A9BB-470F-B35C-694147472080}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63C32AC8-2EE2-4DB7-99C5-84FD815AADC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63C32AC8-2EE2-4DB7-99C5-84FD815AADC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63C32AC8-2EE2-4DB7-99C5-84FD815AADC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63C32AC8-2EE2-4DB7-99C5-84FD815AADC3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

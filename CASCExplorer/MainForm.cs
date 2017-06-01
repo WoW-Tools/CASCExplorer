@@ -19,6 +19,7 @@ namespace CASCExplorer
         public MainForm()
         {
             InitializeComponent();
+            viewHelper.ViewPanel = splitContainer2.Panel2;
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -80,6 +81,7 @@ namespace CASCExplorer
             }
 
             useLVToolStripMenuItem.Checked = (Settings.Default.ContentFlags & ContentFlags.LowViolence) != 0;
+            tsmShowPreview.Checked = Settings.Default.PreviewVisible;
         }
 
         private void ViewHelper_OnStorageChanged()
@@ -171,6 +173,11 @@ namespace CASCExplorer
         private void listView1_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
         {
             viewHelper.CreateListViewItem(e);
+        }
+
+        private void listView1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            viewHelper.PreviewFile(fileList);
         }
 
         private void listView1_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -465,6 +472,13 @@ namespace CASCExplorer
         private void exportFoldersToolStripMenuItem_Click(object sender, EventArgs e)
         {
             viewHelper.ExportFolders();
+        }
+
+        private void tsmShowPreview_CheckedChanged(object sender, EventArgs e)
+        {
+            splitContainer2.Panel2Collapsed = !tsmShowPreview.Checked;
+            viewHelper.ViewPanel = tsmShowPreview.Checked ? splitContainer2.Panel2 : null;
+            Settings.Default.PreviewVisible = tsmShowPreview.Checked;
         }
     }
 }
