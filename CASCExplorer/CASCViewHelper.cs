@@ -414,7 +414,11 @@ namespace CASCExplorer
             var file = _displayedEntries[fileList.SelectedIndex] as CASCFile;
 
             if (file == null)
+            {
+                ViewPanel?.Controls.Clear();
+                m_currentControl = null;
                 return;
+            }
 
             var extension = Path.GetExtension(file.Name);
 
