@@ -5,7 +5,7 @@ namespace CASCExplorer.ViewPlugin
 {
     public interface IPreviwDefault
     {
-        Control Show(Stream stream);
+        Control Show(Stream stream, string fileName);
     }
 
     public interface IPreviw : IPreviwDefault

@@ -405,7 +405,7 @@ namespace CASCExplorer
                     using (var stream = _casc.OpenFile(file.Hash))
                     {
                         // todo: use Task
-                        var control = plugin.Show(stream);
+                        var control = plugin.Show(stream, file.Name);
                         if (m_currentControl != control)
                         {
                             ViewPanel.Controls.Clear();
@@ -423,7 +423,7 @@ namespace CASCExplorer
                 using (var stream = _casc.OpenFile(file.Hash))
                 {
                     // todo: use Task
-                    var control = DefaultPreviewPlugin.Show(stream);
+                    var control = DefaultPreviewPlugin.Show(stream, file.Name);
                     if (m_currentControl != control)
                     {
                         ViewPanel.Controls.Clear();

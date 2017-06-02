@@ -40,12 +40,12 @@
             this.hexBox1.ShadowSelectionColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(60)))), ((int)(((byte)(188)))), ((int)(((byte)(255)))));
             this.hexBox1.Size = new System.Drawing.Size(575, 400);
             this.hexBox1.TabIndex = 0;
+            this.hexBox1.VScrollBarVisible = true;
             // 
             // HexView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.AutoScroll = true;
             this.Controls.Add(this.hexBox1);
             this.Name = "HexView";
             this.Size = new System.Drawing.Size(575, 400);
