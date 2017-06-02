@@ -418,22 +418,20 @@ namespace CASCExplorer
 
             var extension = Path.GetExtension(file.Name);
 
+            foreach (var plugin in ViewPlugins)
+            {
+                if (plugin.Metadata.Extensions?.Contains(extension) == true)
+                {
+                    ExecPlugin(plugin.Value, file);
+                    return;
+                }
+            }
+
             var defPlugin = ViewPlugins.Where(p => p.Metadata.Extensions == null).FirstOrDefault();
             if (defPlugin != null)
             {
                 ExecPlugin(defPlugin.Value, file);
                 return;
-            }
-            else
-            {
-                foreach (var plugin in ViewPlugins)
-                {
-                    if (plugin.Metadata.Extensions?.Contains(extension) == true)
-                    {
-                        ExecPlugin(plugin.Value, file);
-                        return;
-                    }
-                }
             }
 
             m_currentControl = null;
