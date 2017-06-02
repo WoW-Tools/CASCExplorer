@@ -37,6 +37,7 @@
             this.hexBox1.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.hexBox1.Location = new System.Drawing.Point(0, 0);
             this.hexBox1.Name = "hexBox1";
+            this.hexBox1.ReadOnly = true;
             this.hexBox1.ShadowSelectionColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(60)))), ((int)(((byte)(188)))), ((int)(((byte)(255)))));
             this.hexBox1.Size = new System.Drawing.Size(575, 400);
             this.hexBox1.TabIndex = 0;
