@@ -7,8 +7,9 @@ using CASCExplorer.ViewPlugin;
 
 namespace CASCExplorer.DefaultViews.Previews
 {
-    [Export(typeof(IPreviwDefault))]
-    public partial class HexView : UserControl, IPreviwDefault
+    [Export(typeof(IPreviw))]
+    [ExportMetadata("Extensions", null)]
+    public partial class HexView : UserControl, IPreviw
     {
         byte[] m_bytes;
 

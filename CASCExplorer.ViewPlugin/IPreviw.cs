@@ -3,13 +3,13 @@ using System.Windows.Forms;
 
 namespace CASCExplorer.ViewPlugin
 {
-    public interface IPreviwDefault
+    public interface IExtensions
     {
-        Control Show(Stream stream, string fileName);
+        string[] Extensions { get; }
     }
 
-    public interface IPreviw : IPreviwDefault
+    public interface IPreviw
     {
-        bool CheckContent(string extension);
+        Control Show(Stream stream, string fileName);
     }
 }

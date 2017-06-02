@@ -36,10 +36,7 @@ namespace CASCExplorer
         private AggregateCatalog m_catalog;
 
         [ImportMany(AllowRecomposition = true)]
-        private List<IPreviw> ViewPlugins { get; set; }
-
-        [Import(AllowRecomposition = true)]
-        private IPreviwDefault DefaultPreviewPlugin { get; set; }
+        private List<Lazy<IPreviw, IExtensions>> ViewPlugins { get; set; }
 
         private Control m_currentControl;
 
@@ -72,7 +69,7 @@ namespace CASCExplorer
                 var container = new CompositionContainer(m_catalog);
                 container.ComposeParts(this);
             }
-            catch (Exception ex)
+            catch (CompositionException ex)
             {
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -383,6 +380,29 @@ namespace CASCExplorer
             MessageBox.Show(string.Format(sizeNumberFmt, "{0:N} bytes", size));
         }
 
+        private void ExecPlugin(IPreviw plugin, ICASCEntry file)
+        {
+            try
+            {
+                using (var stream = _casc.OpenFile(file.Hash))
+                {
+                    // todo: use Task
+                    var control = plugin.Show(stream, file.Name);
+                    if (m_currentControl != control)
+                    {
+                        ViewPanel.Controls.Clear();
+                        ViewPanel.Controls.Add(control);
+                        control.Dock = DockStyle.Fill;
+                        m_currentControl = control;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Plugin Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         public void PreviewFile(NoFlickerListView fileList)
         {
             if (_currentFolder == null || ViewPanel == null || ViewPlugins == null)
@@ -398,41 +418,22 @@ namespace CASCExplorer
 
             var extension = Path.GetExtension(file.Name);
 
-            foreach (var plugin in ViewPlugins)
+            var defPlugin = ViewPlugins.Where(p => p.Metadata.Extensions == null).FirstOrDefault();
+            if (defPlugin != null)
             {
-                if (plugin.CheckContent(extension))
-                {
-                    using (var stream = _casc.OpenFile(file.Hash))
-                    {
-                        // todo: use Task
-                        var control = plugin.Show(stream, file.Name);
-                        if (m_currentControl != control)
-                        {
-                            ViewPanel.Controls.Clear();
-                            ViewPanel.Controls.Add(control);
-                            control.Dock = DockStyle.Fill;
-                            m_currentControl = control;
-                        }
-                    }
-                    return;
-                }
-            }
-
-            if (DefaultPreviewPlugin != null)
-            {
-                using (var stream = _casc.OpenFile(file.Hash))
-                {
-                    // todo: use Task
-                    var control = DefaultPreviewPlugin.Show(stream, file.Name);
-                    if (m_currentControl != control)
-                    {
-                        ViewPanel.Controls.Clear();
-                        ViewPanel.Controls.Add(control);
-                        control.Dock = DockStyle.Fill;
-                        m_currentControl = control;
-                    }
-                }
+                ExecPlugin(defPlugin.Value, file);
                 return;
+            }
+            else
+            {
+                foreach (var plugin in ViewPlugins)
+                {
+                    if (plugin.Metadata.Extensions?.Contains(extension) == true)
+                    {
+                        ExecPlugin(plugin.Value, file);
+                        return;
+                    }
+                }
             }
 
             m_currentControl = null;

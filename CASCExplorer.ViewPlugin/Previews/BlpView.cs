@@ -11,6 +11,7 @@ using System.Drawing.Imaging;
 namespace CASCExplorer.DefaultViews.Previews
 {
     [Export(typeof(IPreviw))]
+    [ExportMetadata("Extensions", new string[] { ".blp" })]
     public partial class BlpView : UserControl, IPreviw
     {
         List<Bitmap> m_mips = new List<Bitmap>();
@@ -19,11 +20,6 @@ namespace CASCExplorer.DefaultViews.Previews
         public BlpView()
         {
             InitializeComponent();
-        }
-
-        public bool CheckContent(string extension)
-        {
-            return extension == ".blp";
         }
 
         public Control Show(Stream stream, string fileName)
