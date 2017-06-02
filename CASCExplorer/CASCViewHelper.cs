@@ -528,6 +528,9 @@ namespace CASCExplorer
             _casc?.Clear();
             _casc = null;
 
+            ViewPanel?.Controls.Clear();
+            m_currentControl = null;
+
             OnCleanup?.Invoke();
         }
 
