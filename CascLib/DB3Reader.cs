@@ -100,8 +100,10 @@ namespace CASCExplorer
 
                 if (magic == DB3FmtSig)
                     HeaderSize = 48;
-                else
+                else if (magic == DB4FmtSig)
                     HeaderSize = 52;
+                else
+                    HeaderSize = 56;
 
                 RecordsCount = reader.ReadInt32();
                 FieldsCount = reader.ReadInt32();
@@ -110,7 +112,8 @@ namespace CASCExplorer
 
                 uint tableHash = reader.ReadUInt32();
                 uint build = reader.ReadUInt32();
-                uint unk1 = reader.ReadUInt32();
+
+                uint unk1 = reader.ReadUInt32(); // timemodified
 
                 int MinId = reader.ReadInt32();
                 int MaxId = reader.ReadInt32();
@@ -204,8 +207,7 @@ namespace CASCExplorer
 
         public DB3Row GetRow(int index)
         {
-            DB3Row row;
-            m_index.TryGetValue(index, out row);
+            m_index.TryGetValue(index, out DB3Row row);
             return row;
         }
 

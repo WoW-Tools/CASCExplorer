@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("CASCExplorer")]
-[assembly: AssemblyCopyright("Copyright © TOM_RUS 2014-2015")]
+[assembly: AssemblyCopyright("Copyright © TOM_RUS 2014-2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

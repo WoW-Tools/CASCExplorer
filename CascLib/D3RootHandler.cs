@@ -16,11 +16,11 @@ namespace CASCExplorer
 
         public static D3RootEntry Read(int type, BinaryReader s)
         {
-            D3RootEntry e = new D3RootEntry();
-
-            e.Type = type;
-            e.MD5 = s.Read<MD5Hash>();
-
+            D3RootEntry e = new D3RootEntry()
+            {
+                Type = type,
+                MD5 = s.Read<MD5Hash>()
+            };
             if (type == 0 || type == 1) // has SNO id
             {
                 e.SNO = s.ReadInt32();
@@ -66,37 +66,32 @@ namespace CASCExplorer
                 var entries = new List<D3RootEntry>();
                 D3RootData[name] = entries;
 
-                EncodingEntry enc;
-
-                if (!casc.Encoding.GetEntry(md5, out enc))
+                if (!casc.Encoding.GetEntry(md5, out EncodingEntry enc))
                     continue;
 
                 using (BinaryReader s = new BinaryReader(casc.OpenFile(enc.Key)))
                 {
-                    if (s != null)
+                    uint magic = s.ReadUInt32();
+
+                    int nEntries0 = s.ReadInt32();
+
+                    for (int i = 0; i < nEntries0; i++)
                     {
-                        uint magic = s.ReadUInt32();
+                        entries.Add(D3RootEntry.Read(0, s));
+                    }
 
-                        int nEntries0 = s.ReadInt32();
+                    int nEntries1 = s.ReadInt32();
 
-                        for (int i = 0; i < nEntries0; i++)
-                        {
-                            entries.Add(D3RootEntry.Read(0, s));
-                        }
+                    for (int i = 0; i < nEntries1; i++)
+                    {
+                        entries.Add(D3RootEntry.Read(1, s));
+                    }
 
-                        int nEntries1 = s.ReadInt32();
+                    int nNamedEntries = s.ReadInt32();
 
-                        for (int i = 0; i < nEntries1; i++)
-                        {
-                            entries.Add(D3RootEntry.Read(1, s));
-                        }
-
-                        int nNamedEntries = s.ReadInt32();
-
-                        for (int i = 0; i < nNamedEntries; i++)
-                        {
-                            entries.Add(D3RootEntry.Read(2, s));
-                        }
+                    for (int i = 0; i < nNamedEntries; i++)
+                    {
+                        entries.Add(D3RootEntry.Read(2, s));
                     }
                 }
 
@@ -106,8 +101,7 @@ namespace CASCExplorer
             // Parse CoreTOC.dat
             var coreTocEntry = D3RootData["Base"].Find(e => e.Name == "CoreTOC.dat");
 
-            EncodingEntry enc1;
-            casc.Encoding.GetEntry(coreTocEntry.MD5, out enc1);
+            casc.Encoding.GetEntry(coreTocEntry.MD5, out EncodingEntry enc1);
 
             using (var file = casc.OpenFile(enc1.Key))
                 tocParser = new CoreTOCParser(file);
@@ -117,8 +111,7 @@ namespace CASCExplorer
             // Parse Packages.dat
             var pkgEntry = D3RootData["Base"].Find(e => e.Name == "Data_D3\\PC\\Misc\\Packages.dat");
 
-            EncodingEntry enc2;
-            casc.Encoding.GetEntry(pkgEntry.MD5, out enc2);
+            casc.Encoding.GetEntry(pkgEntry.MD5, out EncodingEntry enc2);
 
             using (var file = casc.OpenFile(enc2.Key))
                 pkgParser = new PackagesParser(file);
@@ -149,8 +142,7 @@ namespace CASCExplorer
 
         public override IEnumerable<RootEntry> GetAllEntries(ulong hash)
         {
-            List<RootEntry> result;
-            RootData.TryGetValue(hash, out result);
+            RootData.TryGetValue(hash, out List<RootEntry> result);
 
             if (result == null)
                 yield break;
@@ -204,12 +196,12 @@ namespace CASCExplorer
                     break;
             }
 
-            RootEntry entry = new RootEntry();
-            entry.MD5 = e.MD5;
+            RootEntry entry = new RootEntry()
+            {
+                MD5 = e.MD5
+            };
 
-            LocaleFlags locale;
-
-            if (Enum.TryParse(pkg, out locale))
+            if (Enum.TryParse(pkg, out LocaleFlags locale))
                 entry.LocaleFlags = locale;
             else
                 entry.LocaleFlags = LocaleFlags.All;
@@ -350,20 +342,20 @@ namespace CASCExplorer
     {
         private const int NUM_SNO_GROUPS = 70;
 
-        public struct TOCHeader
+        public unsafe struct TOCHeader
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = NUM_SNO_GROUPS)]
-            public int[] entryCounts;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = NUM_SNO_GROUPS)]
-            public int[] entryOffsets;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = NUM_SNO_GROUPS)]
-            public int[] entryUnkCounts;
+            //[MarshalAs(UnmanagedType.ByValArray, SizeConst = NUM_SNO_GROUPS)]
+            public fixed int entryCounts[NUM_SNO_GROUPS];
+            //[MarshalAs(UnmanagedType.ByValArray, SizeConst = NUM_SNO_GROUPS)]
+            public fixed int entryOffsets[NUM_SNO_GROUPS];
+            //[MarshalAs(UnmanagedType.ByValArray, SizeConst = NUM_SNO_GROUPS)]
+            public fixed int entryUnkCounts[NUM_SNO_GROUPS];
             public int unk;
         }
 
-        Dictionary<int, SNOInfo> snoDic = new Dictionary<int, SNOInfo>();
+        readonly Dictionary<int, SNOInfo> snoDic = new Dictionary<int, SNOInfo>();
 
-        Dictionary<SNOGroup, string> extensions = new Dictionary<SNOGroup, string>()
+        readonly Dictionary<SNOGroup, string> extensions = new Dictionary<SNOGroup, string>()
         {
             { SNOGroup.Code, "" },
             { SNOGroup.None, "" },
@@ -435,7 +427,7 @@ namespace CASCExplorer
             { SNOGroup.DungeonFinder, "" },
         };
 
-        public CoreTOCParser(Stream stream)
+        public unsafe CoreTOCParser(Stream stream)
         {
             using (var br = new BinaryReader(stream))
             {
@@ -467,15 +459,14 @@ namespace CASCExplorer
 
         public SNOInfo GetSNO(int id)
         {
-            SNOInfo sno;
-            snoDic.TryGetValue(id, out sno);
+            snoDic.TryGetValue(id, out SNOInfo sno);
             return sno;
         }
     }
 
     public class PackagesParser
     {
-        Dictionary<string, string> nameToExtDic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        readonly Dictionary<string, string> nameToExtDic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         public PackagesParser(Stream stream)
         {
@@ -494,8 +485,7 @@ namespace CASCExplorer
 
         public string GetExtension(string partialName)
         {
-            string ext;
-            nameToExtDic.TryGetValue(partialName, out ext);
+            nameToExtDic.TryGetValue(partialName, out string ext);
             return ext;
         }
     }

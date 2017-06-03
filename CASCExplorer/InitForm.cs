@@ -52,7 +52,10 @@ namespace CASCExplorer
 
             (casc.Root as WowRootHandler)?.LoadFileDataComplete(casc);
 
-            casc.Root.LoadListFile(Path.Combine(Application.StartupPath, "listfile.txt"), backgroundWorker1);
+            using (var _ = new PerfCounter("LoadListFile()"))
+            {
+                casc.Root.LoadListFile(Path.Combine(Application.StartupPath, "listfile.txt"), backgroundWorker1);
+            }
 
             var fldr = casc.Root.SetFlags(Settings.Default.LocaleFlags, Settings.Default.ContentFlags);
             casc.Root.MergeInstall(casc.Install);

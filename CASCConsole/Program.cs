@@ -10,7 +10,7 @@ namespace CASCConsole
 {
     class Program
     {
-        static object progressLock = new object();
+        static readonly object ProgressLock = new object();
 
         static void Main(string[] args)
         {
@@ -30,6 +30,8 @@ namespace CASCConsole
             BackgroundWorkerEx bgLoader = new BackgroundWorkerEx();
             bgLoader.ProgressChanged += BgLoader_ProgressChanged;
 
+            //CASCConfig.LoadFlags |= LoadFlags.Install;
+
             CASCConfig config = Settings.Default.OnlineMode
                 ? CASCConfig.LoadOnlineStorageConfig(Settings.Default.Product, "us")
                 : CASCConfig.LoadLocalStorageConfig(Settings.Default.StoragePath);
@@ -43,6 +45,7 @@ namespace CASCConsole
 
             cascHandler.Root.LoadListFile(Path.Combine(Environment.CurrentDirectory, "listfile.txt"), bgLoader);
             CASCFolder root = cascHandler.Root.SetFlags(locale, content);
+            //cascHandler.Root.MergeInstall(cascHandler.Install);
 
             Console.WriteLine("Loaded.");
 
@@ -78,7 +81,7 @@ namespace CASCConsole
 
         private static void BgLoader_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            lock (progressLock)
+            lock (ProgressLock)
             {
                 if (e.UserState != null)
                     Console.WriteLine(e.UserState);
@@ -89,7 +92,7 @@ namespace CASCConsole
 
         private static void DrawProgressBar(long complete, long maxVal, int barSize, char progressCharacter)
         {
-            float perc = (float)complete / (float)maxVal;
+            float perc = (float)complete / maxVal;
             DrawProgressBar(perc, barSize, progressCharacter);
         }
 
@@ -97,8 +100,8 @@ namespace CASCConsole
         {
             Console.CursorVisible = false;
             int left = Console.CursorLeft;
-            int chars = (int)Math.Round(percent / (1.0f / (float)barSize));
-            string p1 = String.Empty, p2 = String.Empty;
+            int chars = (int)Math.Round(percent / (1.0f / barSize));
+            string p1 = string.Empty, p2 = string.Empty;
 
             for (int i = 0; i < chars; i++)
                 p1 += progressCharacter;

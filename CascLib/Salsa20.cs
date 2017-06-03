@@ -58,6 +58,11 @@ namespace CASCExplorer
             return new Salsa20CryptoTransform(rgbKey, rgbIV, m_rounds);
         }
 
+        private new bool ValidKeySize(int size)
+        {
+            return size == 128 || size == 256;
+        }
+
         /// <summary>
         /// Generates a random initialization vector (<see cref="SymmetricAlgorithm.IV"/>) to use for the algorithm.
         /// </summary>
@@ -122,12 +127,15 @@ namespace CASCExplorer
                 throw new CryptographicException("Invalid IV size; it must be 8 bytes.");
         }
 
+        private static Random rnd = new Random();
+
         // Returns a new byte array containing the specified number of random bytes.
         private static byte[] GetRandomBytes(int byteCount)
         {
             byte[] bytes = new byte[byteCount];
-            using (RandomNumberGenerator rng = new RNGCryptoServiceProvider())
-                rng.GetBytes(bytes);
+            rnd.NextBytes(bytes);
+            //using (RandomNumberGenerator rng = new RNGCryptoServiceProvider())
+            //    rng.GetBytes(bytes);
             return bytes;
         }
 

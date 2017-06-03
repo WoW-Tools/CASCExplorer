@@ -133,8 +133,7 @@ namespace CASCExplorer
             ulong* ptr = (ulong*)&key;
             ptr[1] &= 0xFF;
 
-            IndexEntry result;
-            if (!LocalIndexData.TryGetValue(key, out result))
+            if (!LocalIndexData.TryGetValue(key, out IndexEntry result))
                 Logger.WriteLine("LocalIndexHandler: missing index: {0}", key.ToHexString());
 
             return result;

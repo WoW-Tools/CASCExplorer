@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+//using System.Net.Http;
+//using System.Net.Http.Headers;
 
 namespace CASCExplorer
 {
@@ -73,11 +75,12 @@ namespace CASCExplorer
                     if (key.IsZeroed()) // wtf?
                         throw new Exception("key.IsZeroed()");
 
-                    IndexEntry entry = new IndexEntry();
-                    entry.Index = i;
-                    entry.Size = br.ReadInt32BE();
-                    entry.Offset = br.ReadInt32BE();
-
+                    IndexEntry entry = new IndexEntry()
+                    {
+                        Index = i,
+                        Size = br.ReadInt32BE(),
+                        Offset = br.ReadInt32BE()
+                    };
                     CDNIndexData.Add(key, entry);
                 }
             }
@@ -143,9 +146,22 @@ namespace CASCExplorer
                 return ms;
             }
 
+            //using (HttpClient client = new HttpClient())
+            //{
+            //    client.DefaultRequestHeaders.Range = new RangeHeaderValue(entry.Offset, entry.Offset + entry.Size - 1);
+
+            //    var resp = client.GetStreamAsync(url).Result;
+
+            //    MemoryStream ms = new MemoryStream(entry.Size);
+            //    resp.CopyBytes(ms, entry.Size);
+            //    ms.Position = 0;
+            //    return ms;
+            //}
+
             HttpWebRequest req = WebRequest.CreateHttp(url);
+            //req.Headers[HttpRequestHeader.Range] = string.Format("bytes={0}-{1}", entry.Offset, entry.Offset + entry.Size - 1);
             req.AddRange(entry.Offset, entry.Offset + entry.Size - 1);
-            using (HttpWebResponse resp = (HttpWebResponse)req.GetResponse())
+            using (HttpWebResponse resp = (HttpWebResponse)req.GetResponseAsync().Result)
             {
                 MemoryStream ms = new MemoryStream(entry.Size);
                 resp.GetResponseStream().CopyBytes(ms, entry.Size);
@@ -186,8 +202,18 @@ namespace CASCExplorer
 
         public static Stream OpenFileDirect(string url)
         {
+            //using (HttpClient client = new HttpClient())
+            //{
+            //    var resp = client.GetStreamAsync(url).Result;
+
+            //    MemoryStream ms = new MemoryStream();
+            //    resp.CopyTo(ms);
+            //    ms.Position = 0;
+            //    return ms;
+            //}
+
             HttpWebRequest req = WebRequest.CreateHttp(url);
-            using (HttpWebResponse resp = (HttpWebResponse)req.GetResponse())
+            using (HttpWebResponse resp = (HttpWebResponse)req.GetResponseAsync().Result)
             {
                 MemoryStream ms = new MemoryStream();
                 resp.GetResponseStream().CopyTo(ms);
@@ -198,9 +224,7 @@ namespace CASCExplorer
 
         public IndexEntry GetIndexInfo(MD5Hash key)
         {
-            IndexEntry result;
-
-            if (!CDNIndexData.TryGetValue(key, out result))
+            if (!CDNIndexData.TryGetValue(key, out IndexEntry result))
                 Logger.WriteLine("CDNIndexHandler: missing index: {0}", key.ToHexString());
 
             return result;

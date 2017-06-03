@@ -5,7 +5,6 @@ using System.Security;
 
 namespace CASCExplorer
 {
-    [SuppressUnmanagedCodeSecurity]
     internal class UnsafeNativeMethods
     {
         [DllImport("kernel32.dll", EntryPoint = "CopyMemory", SetLastError = false)]
@@ -27,7 +26,7 @@ namespace CASCExplorer
         private readonly static PtrToStructureDelegateIntPtr PtrToStructureIntPtr = BuildLoadFromIntPtrMethod();
         private readonly static PtrToStructureDelegateBytePtr PtrToStructureBytePtr = BuildLoadFromBytePtrMethod();
 
-        public static readonly int Size = Marshal.SizeOf(typeof(T));
+        public static readonly int Size = Marshal.SizeOf<T>();
 
         private static DynamicMethod methodGetPtr;
         private static DynamicMethod methodLoadIntPtr;
@@ -36,7 +35,7 @@ namespace CASCExplorer
         private static GetPtrDelegate BuildGetPtrMethod()
         {
             methodGetPtr = new DynamicMethod("GetStructPtr<" + typeof(T).FullName + ">",
-                typeof(IntPtr), new Type[1] { typeof(T).MakeByRefType() }, typeof(FastStruct<T>).Module);
+                typeof(IntPtr), new[] { typeof(T).MakeByRefType() }, typeof(FastStruct<T>));
 
             ILGenerator generator = methodGetPtr.GetILGenerator();
             generator.Emit(OpCodes.Ldarg_0);
@@ -48,7 +47,7 @@ namespace CASCExplorer
         private static PtrToStructureDelegateIntPtr BuildLoadFromIntPtrMethod()
         {
             methodLoadIntPtr = new DynamicMethod("PtrToStructureIntPtr<" + typeof(T).FullName + ">",
-                typeof(T), new Type[1] { typeof(IntPtr) }, typeof(FastStruct<T>).Module);
+                typeof(T), new[] { typeof(IntPtr) }, typeof(FastStruct<T>));
 
             ILGenerator generator = methodLoadIntPtr.GetILGenerator();
             generator.Emit(OpCodes.Ldarg_0);
@@ -58,10 +57,10 @@ namespace CASCExplorer
             return (PtrToStructureDelegateIntPtr)methodLoadIntPtr.CreateDelegate(typeof(PtrToStructureDelegateIntPtr));
         }
 
-        private static unsafe PtrToStructureDelegateBytePtr BuildLoadFromBytePtrMethod()
+        private static PtrToStructureDelegateBytePtr BuildLoadFromBytePtrMethod()
         {
             methodLoadBytePtr = new DynamicMethod("PtrToStructureBytePtr<" + typeof(T).FullName + ">",
-                typeof(T), new Type[1] { typeof(byte*) }, typeof(FastStruct<T>).Module);
+                typeof(T), new[] { typeof(byte*) }, typeof(FastStruct<T>));
 
             ILGenerator generator = methodLoadBytePtr.GetILGenerator();
             generator.Emit(OpCodes.Ldarg_0);

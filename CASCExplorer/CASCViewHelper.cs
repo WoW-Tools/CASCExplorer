@@ -74,12 +74,10 @@ namespace CASCExplorer
 
                 foreach (var file in installFiles)
                 {
-                    EncodingEntry enc;
-
-                    if (_casc.Encoding.GetEntry(file.MD5, out enc))
+                    if (_casc.Encoding.GetEntry(file.MD5, out EncodingEntry enc))
                         _casc.SaveFileTo(enc.Key, Path.Combine("data", build, "install_files"), file.Name);
 
-                    progress.Report((int)(++numDone / (float)numFiles * 100.0f));
+                    progress.Report((int)(++numDone / (float)numFiles * 100));
                 }
             });
         }
@@ -124,30 +122,28 @@ namespace CASCExplorer
                         using (Stream skStream = _casc.OpenFile("DBFilesClient\\SoundKit.db2"))
                         using (Stream skeStream = _casc.OpenFile("DBFilesClient\\SoundKitEntry.db2"))
                         {
-                            DB3Reader sk = new DB3Reader(skStream);
-                            DB3Reader ske = new DB3Reader(skeStream);
+                            DB6Reader sk = new DB6Reader(skStream);
+                            DB6Reader ske = new DB6Reader(skeStream);
 
                             Dictionary<int, List<int>> lookup = new Dictionary<int, List<int>>();
 
                             foreach (var row in ske)
                             {
-                                int soundKitId = row.Value.GetField<ushort>(0xC);
+                                int soundKitId = row.Value.GetField<int>(3);
 
                                 if (!lookup.ContainsKey(soundKitId))
                                     lookup[soundKitId] = new List<int>();
 
-                                lookup[soundKitId].Add(row.Value.GetField<int>(0x4));
+                                lookup[soundKitId].Add(row.Value.GetField<int>(0));
                             }
 
                             foreach (var row in sk)
                             {
-                                string name = row.Value.GetField<string>(0x4).Replace(':', '_');
+                                string name = row.Value.GetField<string>(0).Replace(':', '_');
 
-                                int type = row.Value.GetField<byte>(0x2C);
+                                int type = row.Value.GetField<byte>(12);
 
-                                List<int> ske_entries;
-
-                                if (!lookup.TryGetValue(row.Key, out ske_entries))
+                                if (!lookup.TryGetValue(row.Key, out List<int> ske_entries))
                                     continue;
 
                                 bool many = ske_entries.Count > 1;
@@ -156,7 +152,7 @@ namespace CASCExplorer
 
                                 foreach (var fid in ske_entries)
                                 {
-                                    idToName[fid] = "unknown\\sound\\" + name + (many ? "_" + (i + 1).ToString("D2") : "") + (type == 28 ? ".mp3" : ".ogg");
+                                    idToName[fid] = "unknown\\sound\\" + name + (many ? "_" + (i + 1).ToString("D2") : "") + "_" + fid + (type == 28 ? ".mp3" : ".ogg");
                                     i++;
                                 }
                             }
@@ -179,8 +175,7 @@ namespace CASCExplorer
                 {
                     CASCFile unknownFile = unknownEntry as CASCFile;
 
-                    string name;
-                    if (idToName.TryGetValue(wowRoot.GetFileDataIdByHash(unknownFile.Hash), out name))
+                    if (idToName.TryGetValue(wowRoot.GetFileDataIdByHash(unknownFile.Hash), out string name))
                         unknownFile.FullName = name;
                     else
                     {
@@ -190,13 +185,17 @@ namespace CASCExplorer
                         if (ext == ".m2")
                         {
                             using (var m2file = _casc.OpenFile(unknownFile.Hash))
+                            using (var br = new BinaryReader(m2file))
                             {
-                                // TODO: read name
+                                m2file.Position = 0x138;
+                                string m2name = br.ReadCString();
+
+                                unknownFile.FullName = "unknown\\" + m2name + ".m2";
                             }
                         }
                     }
 
-                    progress.Report((int)(++numDone / (float)numTotal * 100.0f));
+                    progress.Report((int)(++numDone / (float)numTotal * 100));
                 }
 
                 _casc.Root.Dump();
@@ -255,9 +254,7 @@ namespace CASCExplorer
                 // Create nodes dynamically
                 foreach (var it in orderedEntries)
                 {
-                    CASCFolder entry = it.Value as CASCFolder;
-
-                    if (entry != null && node.Nodes[entry.Name] == null)
+                    if (it.Value is CASCFolder entry && node.Nodes[entry.Name] == null)
                     {
                         TreeNode newNode = node.Nodes.Add(entry.Name);
                         newNode.Tag = entry;
@@ -447,17 +444,27 @@ namespace CASCExplorer
 
                 if (rootInfosLocale.Any())
                 {
-                    EncodingEntry enc;
-
-                    if (_casc.Encoding.GetEntry(rootInfosLocale.First().MD5, out enc))
+                    if (_casc.Encoding.GetEntry(rootInfosLocale.First().MD5, out EncodingEntry enc))
                     {
                         size = enc.Size.ToString("N", sizeNumberFmt) ?? "0";
+                    }
+                    else
+                    {
+                        size = "NYI";
 
-                        foreach (var rootInfo in rootInfosLocale)
+                        if (_casc.Root is OwRootHandler owRoot)
                         {
-                            localeFlags |= rootInfo.LocaleFlags;
-                            contentFlags |= rootInfo.ContentFlags;
+                            if (owRoot.GetEntry(entry.Hash, out OWRootEntry rootEntry))
+                            {
+                                size = rootEntry.pkgIndexRec.Size.ToString("N", sizeNumberFmt) ?? "0";
+                            }
                         }
+                    }
+
+                    foreach (var rootInfo in rootInfosLocale)
+                    {
+                        localeFlags |= rootInfo.LocaleFlags;
+                        contentFlags |= rootInfo.ContentFlags;
                     }
                 }
                 else
@@ -466,9 +473,7 @@ namespace CASCExplorer
 
                     if (installInfos.Any())
                     {
-                        EncodingEntry enc;
-
-                        if (_casc.Encoding.GetEntry(installInfos.First().MD5, out enc))
+                        if (_casc.Encoding.GetEntry(installInfos.First().MD5, out EncodingEntry enc))
                         {
                             size = enc.Size.ToString("N", sizeNumberFmt) ?? "0";
 
@@ -550,10 +555,68 @@ namespace CASCExplorer
 
         public void ExportListFile()
         {
+            WowRootHandler wowRoot = CASC.Root as WowRootHandler;
+
             using (StreamWriter sw = new StreamWriter("listfile_export.txt"))
             {
-                foreach (var file in CASCFolder.GetFiles(_root.Entries.Select(kv => kv.Value), null, true).OrderBy(f => f.FullName, StringComparer.OrdinalIgnoreCase))
-                    sw.WriteLine(file.FullName);
+                foreach (var file in CASCFile.FileNames.OrderBy(f => f.Value, StringComparer.OrdinalIgnoreCase))
+                {
+                    if (CASC.FileExists(file.Key) && (wowRoot == null || !wowRoot.IsUnknownFile(file.Key)))
+                        sw.WriteLine(file.Value);
+                }
+
+                //var wr = CASC.Root as WowRootHandler;
+
+                //SortedDictionary<int, string> fids = new SortedDictionary<int, string>();
+
+                //foreach (var file in CASCFile.FileNames)
+                //{
+                //    var id = wr.GetFileDataIdByName(file.Value);
+
+                //    if (id > 0)
+                //    {
+                //        fids[id] = file.Value;
+                //    }
+                //}
+
+                //foreach (var file in fids)
+                //{
+                //    sw.WriteLine("{0} {1}", file.Key, file.Value);
+                //}
+            }
+        }
+
+        public void ExportFolders()
+        {
+            WowRootHandler wowRoot = CASC.Root as WowRootHandler;
+
+            using (StreamWriter sw = new StreamWriter("dirs.txt"))
+            {
+                HashSet<string> dirData = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var file in CASCFile.FileNames.OrderBy(f => f.Value, StringComparer.OrdinalIgnoreCase))
+                {
+                    if (CASC.FileExists(file.Key) && (wowRoot == null || !wowRoot.IsUnknownFile(file.Key)))
+                    {
+                        ulong fileHash = file.Key;
+
+                        int dirSepIndex = file.Value.LastIndexOf('\\');
+
+                        if (dirSepIndex >= 0)
+                        {
+                            string dir = file.Value.Substring(0, dirSepIndex);
+
+                            dirData.Add(dir);
+                        }
+                    }
+                }
+
+                foreach (var dir in dirData)
+                {
+                    sw.WriteLine(dir);
+                }
+
+                Logger.WriteLine("WowRootHandler: loaded {0} valid file names", CASCFile.FileNames.Count);
             }
         }
 
@@ -562,11 +625,11 @@ namespace CASCExplorer
             if (_casc == null)
                 return;
 
-            EncodingEntry enc;
-
             _casc.SaveFileTo(_casc.Config.EncodingKey, ".", "encoding");
 
-            if (_casc.Encoding.GetEntry(_casc.Config.RootMD5, out enc))
+            //_casc.SaveFileTo(_casc.Config.PatchKey, ".", "patch");
+
+            if (_casc.Encoding.GetEntry(_casc.Config.RootMD5, out EncodingEntry enc))
                 _casc.SaveFileTo(enc.Key, ".", "root");
 
             if (_casc.Encoding.GetEntry(_casc.Config.InstallMD5, out enc))
@@ -574,6 +637,9 @@ namespace CASCExplorer
 
             if (_casc.Encoding.GetEntry(_casc.Config.DownloadMD5, out enc))
                 _casc.SaveFileTo(enc.Key, ".", "download");
+
+            //if (_casc.Encoding.GetEntry(_casc.Config.PartialPriorityMD5, out enc))
+            //    _casc.SaveFileTo(enc.Key, ".", "partial-priority");
         }
     }
 }

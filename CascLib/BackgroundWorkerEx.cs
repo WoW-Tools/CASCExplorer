@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Security.Permissions;
 using System.Threading;
 
 namespace CASCExplorer

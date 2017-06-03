@@ -24,67 +24,35 @@ namespace CASCExplorer
             _name = name;
         }
 
-        public string Name
-        {
-            get { return _name; }
-        }
+        public string Name => _name;
 
-        public ulong Hash
-        {
-            get { return 0; }
-        }
+        public ulong Hash => 0;
 
         public ICASCEntry GetEntry(string name)
         {
-            ICASCEntry entry;
-            Entries.TryGetValue(name, out entry);
+            Entries.TryGetValue(name, out ICASCEntry entry);
             return entry;
         }
 
         public static IEnumerable<CASCFile> GetFiles(IEnumerable<ICASCEntry> entries, IEnumerable<int> selection = null, bool recursive = true)
         {
-            if (selection != null)
+            var entries2 = selection != null ? selection.Select(index => entries.ElementAt(index)) : entries;
+
+            foreach (var entry in entries2)
             {
-                foreach (int index in selection)
+                if (entry is CASCFile file1)
                 {
-                    var entry = entries.ElementAt(index);
-
-                    if (entry is CASCFile)
-                    {
-                        yield return entry as CASCFile;
-                    }
-                    else
-                    {
-                        if (recursive)
-                        {
-                            var folder = entry as CASCFolder;
-
-                            foreach (var file in GetFiles(folder.Entries.Select(kv => kv.Value)))
-                            {
-                                yield return file;
-                            }
-                        }
-                    }
+                    yield return file1;
                 }
-            }
-            else
-            {
-                foreach (var entry in entries)
+                else
                 {
-                    if (entry is CASCFile)
+                    if (recursive)
                     {
-                        yield return entry as CASCFile;
-                    }
-                    else
-                    {
-                        if (recursive)
-                        {
-                            var folder = entry as CASCFolder;
+                        var folder = entry as CASCFolder;
 
-                            foreach (var file in GetFiles(folder.Entries.Select(kv => kv.Value)))
-                            {
-                                yield return file;
-                            }
+                        foreach (var file in GetFiles(folder.Entries.Select(kv => kv.Value)))
+                        {
+                            yield return file;
                         }
                     }
                 }
@@ -123,27 +91,17 @@ namespace CASCExplorer
             this.hash = hash;
         }
 
-        public string Name
-        {
-            get { return Path.GetFileName(FullName); }
-        }
+        public string Name => Path.GetFileName(FullName);
 
         public string FullName
         {
-            get { return FileNames[hash]; }
-            set { FileNames[hash] = value; }
+            get => FileNames[hash];
+            set => FileNames[hash] = value;
         }
 
-        public ulong Hash
-        {
-            get { return hash; }
-        }
+        public ulong Hash => hash;
 
-        public int GetSize(CASCHandler casc)
-        {
-            EncodingEntry enc;
-            return casc.GetEncodingEntry(hash, out enc) ? enc.Size : 0;
-        }
+        public int GetSize(CASCHandler casc) => casc.GetEncodingEntry(hash, out EncodingEntry enc) ? enc.Size : 0;
 
         public int CompareTo(ICASCEntry other, int col, CASCHandler casc)
         {

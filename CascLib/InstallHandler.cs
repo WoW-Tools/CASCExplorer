@@ -48,10 +48,11 @@ namespace CASCExplorer
 
             for (int i = 0; i < numTags; i++)
             {
-                InstallTag tag = new InstallTag();
-                tag.Name = stream.ReadCString();
-                tag.Type = stream.ReadInt16BE();
-
+                InstallTag tag = new InstallTag()
+                {
+                    Name = stream.ReadCString(),
+                    Type = stream.ReadInt16BE()
+                };
                 byte[] bits = stream.ReadBytes(numMaskBytes);
 
                 for (int j = 0; j < numMaskBytes; j++)
@@ -64,11 +65,12 @@ namespace CASCExplorer
 
             for (int i = 0; i < numFiles; i++)
             {
-                InstallEntry entry = new InstallEntry();
-                entry.Name = stream.ReadCString();
-                entry.MD5 = stream.Read<MD5Hash>();
-                entry.Size = stream.ReadInt32BE();
-
+                InstallEntry entry = new InstallEntry()
+                {
+                    Name = stream.ReadCString(),
+                    MD5 = stream.Read<MD5Hash>(),
+                    Size = stream.ReadInt32BE()
+                };
                 InstallData.Add(entry);
 
                 entry.Tags = Tags.FindAll(tag => tag.Bits[i]);

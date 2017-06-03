@@ -7,8 +7,8 @@ namespace CASCExplorer
 {
     public class CacheMetaData
     {
-        public long Size { get; private set; }
-        public byte[] MD5 { get; private set; }
+        public long Size { get; }
+        public byte[] MD5 { get; }
 
         public CacheMetaData(long size, byte[] md5)
         {
@@ -18,7 +18,7 @@ namespace CASCExplorer
 
         public void Save(string file)
         {
-            File.WriteAllText(file + ".dat", string.Format("{0} {1}", Size, MD5.ToHexString()));
+            File.WriteAllText(file + ".dat", $"{Size} {MD5.ToHexString()}");
         }
 
         public static CacheMetaData Load(string file)
@@ -44,17 +44,17 @@ namespace CASCExplorer
     public class CDNCache
     {
         public bool Enabled { get; set; } = true;
-        private bool CacheData { get; set; } = false;
+        public bool CacheData { get; set; } = false;
         public bool Validate { get; set; } = true;
 
-        private string cachePath;
-        private SyncDownloader downloader = new SyncDownloader(null);
+        private readonly string _cachePath;
+        private readonly SyncDownloader _downloader = new SyncDownloader(null);
 
-        private MD5 md5 = MD5.Create();
+        private readonly MD5 _md5 = MD5.Create();
 
         public CDNCache(string path)
         {
-            cachePath = path;
+            _cachePath = path;
         }
 
         public Stream OpenFile(string name, string url, bool isData)
@@ -65,18 +65,18 @@ namespace CASCExplorer
             if (isData && !CacheData)
                 return null;
 
-            string file = Path.Combine(cachePath, name);
+            string file = Path.Combine(_cachePath, name);
 
             Logger.WriteLine("CDNCache: Opening file {0}", file);
 
             FileInfo fi = new FileInfo(file);
 
             if (!fi.Exists)
-                downloader.DownloadFile(url, file);
+                _downloader.DownloadFile(url, file);
 
             if (Validate)
             {
-                CacheMetaData meta = CacheMetaData.Load(file) ?? downloader.GetMetaData(url, file);
+                CacheMetaData meta = CacheMetaData.Load(file) ?? _downloader.GetMetaData(url, file);
 
                 if (meta == null)
                     throw new Exception(string.Format("unable to validate file {0}", file));
@@ -86,11 +86,11 @@ namespace CASCExplorer
                 using (FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
                     sizeOk = fs.Length == meta.Size;
-                    md5Ok = md5.ComputeHash(fs).EqualsTo(meta.MD5);
+                    md5Ok = _md5.ComputeHash(fs).EqualsTo(meta.MD5);
                 }
 
                 if (!sizeOk || !md5Ok)
-                    downloader.DownloadFile(url, file);
+                    _downloader.DownloadFile(url, file);
             }
 
             return new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -98,7 +98,7 @@ namespace CASCExplorer
 
         public bool HasFile(string name)
         {
-            return File.Exists(Path.Combine(cachePath, name));
+            return File.Exists(Path.Combine(_cachePath, name));
         }
     }
 }

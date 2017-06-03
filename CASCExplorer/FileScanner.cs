@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -6,24 +7,26 @@ namespace CASCExplorer
 {
     class FileScanner
     {
-        static readonly List<string> excludeFileTypes = new List<string>()
+        private static readonly List<string> excludeFileTypes = new List<string>()
         {
             ".ogg", ".mp3", ".wav", ".avi", ".ttf", ".blp", ".sig", ".toc", ".blob", ".anim", ".skin", ".phys"
         };
 
-        static readonly List<string> extensions = new List<string>()
+        private static readonly List<string> extensions = new List<string>()
         {
             ".adt", ".anim", ".avi", ".blob", ".blp", ".bls", ".bone", ".db2", ".dbc", ".html", ".ini", ".lst", ".lua", ".m2", ".mp3", ".ogg",
             ".phys", ".sbt", ".sig", ".skin", ".tex", ".toc", ".ttf", ".txt", ".wdl", ".wdt", ".wfx", ".wmo", ".wtf", ".xml", ".xsd", ".zmp"
         };
 
-        static readonly Dictionary<byte[], string> MagicNumbers = new Dictionary<byte[], string>()
+        private static readonly Dictionary<byte[], string> MagicNumbers = new Dictionary<byte[], string>()
         {
             { new byte[] { 0x42, 0x4c, 0x50, 0x32 }, ".blp" },
             { new byte[] { 0x4d, 0x44, 0x32, 0x30 }, ".m2" },
             { new byte[] { 0x4d, 0x44, 0x32, 0x31 }, ".m2" },
+            { new byte[] { 0x53, 0x59, 0x48, 0x50 }, ".phys" },
             { new byte[] { 0x53, 0x4b, 0x49, 0x4e }, ".skin" },
             { new byte[] { 0x57, 0x44, 0x42, 0x43 }, ".dbc" },
+            { new byte[] { 0x57, 0x44, 0x42, 0x35 }, ".db2" },
             { new byte[] { 0x52, 0x56, 0x58, 0x54 }, ".tex" },
             { new byte[] { 0x4f, 0x67, 0x67, 0x53 }, ".ogg" },
             { new byte[] { 0x48, 0x53, 0x58, 0x47 }, ".bls" },
@@ -55,9 +58,9 @@ namespace CASCExplorer
             {
                 fileStream = CASC.OpenFile(file.Hash);
             }
-            catch
+            catch (Exception exc)
             {
-                Logger.WriteLine("Skipped {0} because of both local and CDN indices are missing.", file.FullName);
+                Logger.WriteLine("Skipped {0}, error {1}.", file.FullName, exc.Message);
                 yield break;
             }
 

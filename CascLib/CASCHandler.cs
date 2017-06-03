@@ -55,12 +55,18 @@ namespace CASCExplorer
                         RootHandler = new WowRootHandler(fs, worker);
                     else if (config.GameType == CASCGameType.Agent || config.GameType == CASCGameType.Bna || config.GameType == CASCGameType.Client)
                         RootHandler = new AgentRootHandler(fs, worker);
+                    else if (config.GameType == CASCGameType.S1)
+                        RootHandler = new S1RootHandler(fs, worker);
                     else if (config.GameType == CASCGameType.Hearthstone)
                         RootHandler = new HSRootHandler(fs, worker);
                     else if (config.GameType == CASCGameType.Overwatch)
-                        RootHandler = new OWRootHandler(fs, worker, this);
+                        RootHandler = new OwRootHandler(fs, worker, this);
                     else
+                    {
+                        //using (var ufs = new FileStream("unk_root", FileMode.Create))
+                        //    fs.BaseStream.CopyTo(ufs);
                         throw new Exception("Unsupported game " + config.BuildUID);
+                    }
                 }
             }
 
@@ -74,6 +80,8 @@ namespace CASCExplorer
                 {
                     using (var fs = OpenInstallFile(EncodingHandler, this))
                         InstallHandler = new InstallHandler(fs, worker);
+
+                    InstallHandler.Print();
                 }
 
                 Logger.WriteLine("CASCHandler: loaded {0} install data", InstallHandler.Count);
@@ -106,12 +114,9 @@ namespace CASCExplorer
 
         public override bool FileExists(int fileDataId)
         {
-            WowRootHandler rh = Root as WowRootHandler;
-
-            if (rh == null)
-                return false;
-
-            return FileExists(rh.GetHashByFileDataId(fileDataId));
+            if (Root is WowRootHandler rh)
+                return FileExists(rh.GetHashByFileDataId(fileDataId));
+            return false;
         }
 
         public override bool FileExists(string file) => FileExists(Hasher.ComputeHash(file));
@@ -126,7 +131,11 @@ namespace CASCExplorer
 
             if ((CASCConfig.LoadFlags & LoadFlags.Install) != 0)
             {
-                var installInfos = Install.GetEntries().Where(e => Hasher.ComputeHash(e.Name) == hash);
+                var installInfos = Install.GetEntries().Where(e => Hasher.ComputeHash(e.Name) == hash && e.Tags.Any(t => t.Type == 1 && t.Name == RootHandler.Locale.ToString()));
+                if (installInfos.Any())
+                    return EncodingHandler.GetEntry(installInfos.First().MD5, out enc);
+
+                installInfos = Install.GetEntries().Where(e => Hasher.ComputeHash(e.Name) == hash);
                 if (installInfos.Any())
                     return EncodingHandler.GetEntry(installInfos.First().MD5, out enc);
             }
@@ -137,9 +146,7 @@ namespace CASCExplorer
 
         public override Stream OpenFile(int fileDataId)
         {
-            WowRootHandler rh = Root as WowRootHandler;
-
-            if (rh != null)
+            if (Root is WowRootHandler rh)
                 return OpenFile(rh.GetHashByFileDataId(fileDataId));
 
             if (CASCConfig.ThrowOnFileNotFound)
@@ -151,10 +158,30 @@ namespace CASCExplorer
 
         public override Stream OpenFile(ulong hash)
         {
-            EncodingEntry encInfo;
-
-            if (GetEncodingEntry(hash, out encInfo))
+            if (GetEncodingEntry(hash, out EncodingEntry encInfo))
                 return OpenFile(encInfo.Key);
+
+            if (RootHandler is OwRootHandler owRoot)
+            {
+                if (owRoot.GetEntry(hash, out OWRootEntry entry))
+                {
+                    if ((entry.baseEntry.ContentFlags & ContentFlags.Bundle) != ContentFlags.None)
+                    {
+                        if (Encoding.GetEntry(entry.pkgIndex.bundleContentKey, out encInfo))
+                        {
+                            using (Stream bundle = OpenFile(encInfo.Key))
+                            {
+                                MemoryStream ms = new MemoryStream();
+
+                                bundle.Position = entry.pkgIndexRec.Offset;
+                                bundle.CopyBytes(ms, entry.pkgIndexRec.Size);
+
+                                return ms;
+                            }
+                        }
+                    }
+                }
+            }
 
             if (CASCConfig.ThrowOnFileNotFound)
                 throw new FileNotFoundException(string.Format("{0:X16}", hash));
@@ -163,12 +190,39 @@ namespace CASCExplorer
 
         public override void SaveFileTo(ulong hash, string extractPath, string fullName)
         {
-            EncodingEntry encInfo;
-
-            if (GetEncodingEntry(hash, out encInfo))
+            if (GetEncodingEntry(hash, out EncodingEntry encInfo))
             {
                 SaveFileTo(encInfo.Key, extractPath, fullName);
                 return;
+            }
+
+            if (RootHandler is OwRootHandler owRoot)
+            {
+                if (owRoot.GetEntry(hash, out OWRootEntry entry))
+                {
+                    if ((entry.baseEntry.ContentFlags & ContentFlags.Bundle) != ContentFlags.None)
+                    {
+                        if (Encoding.GetEntry(entry.pkgIndex.bundleContentKey, out encInfo))
+                        {
+                            using (Stream bundle = OpenFile(encInfo.Key))
+                            {
+                                string fullPath = Path.Combine(extractPath, fullName);
+                                string dir = Path.GetDirectoryName(fullPath);
+
+                                if (!Directory.Exists(dir))
+                                    Directory.CreateDirectory(dir);
+
+                                using (var fileStream = File.Open(fullPath, FileMode.Create))
+                                {
+                                    bundle.Position = entry.pkgIndexRec.Offset;
+                                    bundle.CopyBytes(fileStream, entry.pkgIndexRec.Size);
+                                }
+                            }
+
+                            return;
+                        }
+                    }
+                }
             }
 
             if (CASCConfig.ThrowOnFileNotFound)
@@ -178,12 +232,16 @@ namespace CASCExplorer
         protected override Stream OpenFileOnline(MD5Hash key)
         {
             IndexEntry idxInfo = CDNIndex.GetIndexInfo(key);
-            return OpenFileLocalInternal(idxInfo, key);
+            return OpenFileOnlineInternal(idxInfo, key);
         }
 
         protected override Stream GetLocalDataStream(MD5Hash key)
         {
             IndexEntry idxInfo = LocalIndex.GetIndexInfo(key);
+            if (idxInfo == null)
+            {
+                Logger.WriteLine("Local index missing: {0}", key.ToHexString());
+            }
             return GetLocalDataStreamInternal(idxInfo, key);
         }
 
@@ -199,7 +257,7 @@ namespace CASCExplorer
             CDNIndex = null;
 
             foreach (var stream in DataStreams)
-                stream.Value.Close();
+                stream.Value.Dispose();
 
             DataStreams.Clear();
 

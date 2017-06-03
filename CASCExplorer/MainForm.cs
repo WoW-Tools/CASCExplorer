@@ -28,6 +28,8 @@ namespace CASCExplorer
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+
             viewHelper.OnCleanup += ViewHelper_OnCleanup;
             viewHelper.OnStorageChanged += ViewHelper_OnStorageChanged;
 
@@ -47,8 +49,10 @@ namespace CASCExplorer
                 if (locale == "None")
                     continue;
 
-                var item = new ToolStripMenuItem(locale);
-                item.Checked = Settings.Default.LocaleFlags.ToString() == locale;
+                var item = new ToolStripMenuItem(locale)
+                {
+                    Checked = Settings.Default.LocaleFlags.ToString() == locale
+                };
                 localeFlagsToolStripMenuItem.DropDownItems.Add(item);
             }
 
@@ -60,8 +64,10 @@ namespace CASCExplorer
 
                 foreach (string game in onlineStorageList)
                 {
-                    var item = new ToolStripMenuItem(onlineStorageList[game]);
-                    item.Tag = game;
+                    var item = new ToolStripMenuItem(onlineStorageList[game])
+                    {
+                        Tag = game
+                    };
                     openOnlineStorageToolStripMenuItem.DropDownItems.Add(item);
                 }
             }
@@ -123,10 +129,15 @@ namespace CASCExplorer
             if (cfg.OnlineMode)
             {
                 CDNBuildsToolStripMenuItem.Enabled = true;
-                foreach (var bld in cfg.Builds)
+                if (cfg.Builds.Count > 1)
                 {
-                    CDNBuildsToolStripMenuItem.DropDownItems.Add(bld["build-name"][0]);
+                    foreach (var bld in cfg.Builds)
+                    {
+                        CDNBuildsToolStripMenuItem.DropDownItems.Add(bld["build-name"][0]);
+                    }
                 }
+                else
+                    CDNBuildsToolStripMenuItem.DropDownItems.Add(cfg.BuildName);
             }
 
             statusProgress.Visible = false;
@@ -342,7 +353,8 @@ namespace CASCExplorer
             if (searchForm == null)
                 searchForm = new SearchForm(fileList);
 
-            searchForm.Show(this);
+            if (!searchForm.Visible)
+                searchForm.Show(this);
         }
 
         private void fileList_SearchForVirtualItem(object sender, SearchForVirtualItemEventArgs e)
@@ -448,6 +460,11 @@ namespace CASCExplorer
         private void openStorageToolStripButton_Click(object sender, EventArgs e)
         {
             OpenStorage();
+        }
+
+        private void exportFoldersToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            viewHelper.ExportFolders();
         }
     }
 }

@@ -64,6 +64,21 @@ namespace CASCExplorer
             }
         }
 
+        public static void ExtractToFile(this Stream input, string path, string name)
+        {
+            string fullPath = Path.Combine(path, name);
+            string dir = Path.GetDirectoryName(fullPath);
+
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            using (var fileStream = File.Open(fullPath, FileMode.Create))
+            {
+                input.Position = 0;
+                input.CopyTo(fileStream);
+            }
+        }
+
         public static string ToHexString(this byte[] data)
         {
             return BitConverter.ToString(data).Replace("-", string.Empty);
@@ -99,7 +114,7 @@ namespace CASCExplorer
         {
             StringBuilder sb = new StringBuilder(bits.Length);
 
-            for (int i = 0; i < bits.Count; ++i)
+            for (int i = 0; i < bits.Length; ++i)
             {
                 sb.Append(bits[i] ? "1" : "0");
             }
@@ -117,10 +132,58 @@ namespace CASCExplorer
             fixed (byte* ptr = array)
                 other = *(MD5Hash*)ptr;
 
-            for (var i = 0; i < 16; ++i)
-                if (key.Value[i] != other.Value[i])
-                    return false;
+            for (int i = 0; i < 2; ++i)
+            {
+                ulong keyPart = *(ulong*)(key.Value + i * 8);
+                ulong otherPart = *(ulong*)(other.Value + i * 8);
 
+                if (keyPart != otherPart)
+                    return false;
+            }
+            return true;
+        }
+
+        public static unsafe bool EqualsTo9(this MD5Hash key, byte[] array)
+        {
+            if (array.Length < 9)
+                return false;
+
+            MD5Hash other;
+
+            fixed (byte* ptr = array)
+                other = *(MD5Hash*)ptr;
+
+            ulong keyPart = *(ulong*)(key.Value);
+            ulong otherPart = *(ulong*)(other.Value);
+
+            if (keyPart != otherPart)
+                return false;
+
+            if (key.Value[8] != other.Value[8])
+                return false;
+
+            //for (int i = 0; i < 2; ++i)
+            //{
+            //    ulong keyPart = *(ulong*)(key.Value + i * 8);
+            //    ulong otherPart = *(ulong*)(other.Value + i * 8);
+
+            //    if (keyPart != otherPart)
+            //        return false;
+            //}
+
+            return true;
+        }
+
+        public static unsafe bool EqualsTo(this MD5Hash key, MD5Hash other)
+        {
+            for (int i = 0; i < 2; ++i)
+            {
+                ulong keyPart = *(ulong*)(key.Value + i * 8);
+                ulong otherPart = *(ulong*)(other.Value + i * 8);
+
+                if (keyPart != otherPart)
+                    return false;
+            }
             return true;
         }
 

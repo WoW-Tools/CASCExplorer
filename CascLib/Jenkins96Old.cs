@@ -10,37 +10,37 @@ namespace CASCExplorer
         private uint a, b, c;
         private uint pc, pb;
 
-        private uint rot(uint x, int k)
+        private uint Rot(uint x, int k)
         {
             return (x << k) | (x >> (32 - k));
         }
 
         private void Mix()
         {
-            a -= c; a ^= rot(c, 4); c += b;
-            b -= a; b ^= rot(a, 6); a += c;
-            c -= b; c ^= rot(b, 8); b += a;
-            a -= c; a ^= rot(c, 16); c += b;
-            b -= a; b ^= rot(a, 19); a += c;
-            c -= b; c ^= rot(b, 4); b += a;
+            a -= c; a ^= Rot(c, 4); c += b;
+            b -= a; b ^= Rot(a, 6); a += c;
+            c -= b; c ^= Rot(b, 8); b += a;
+            a -= c; a ^= Rot(c, 16); c += b;
+            b -= a; b ^= Rot(a, 19); a += c;
+            c -= b; c ^= Rot(b, 4); b += a;
         }
 
         private void Final()
         {
-            c ^= b; c -= rot(b, 14);
-            a ^= c; a -= rot(c, 11);
-            b ^= a; b -= rot(a, 25);
-            c ^= b; c -= rot(b, 16);
-            a ^= c; a -= rot(c, 4);
-            b ^= a; b -= rot(a, 14);
-            c ^= b; c -= rot(b, 24);
+            c ^= b; c -= Rot(b, 14);
+            a ^= c; a -= Rot(c, 11);
+            b ^= a; b -= Rot(a, 25);
+            c ^= b; c -= Rot(b, 16);
+            a ^= c; a -= Rot(c, 4);
+            b ^= a; b -= Rot(a, 14);
+            c ^= b; c -= Rot(b, 24);
         }
 
         public unsafe ulong ComputeHash(string str, bool fix = true)
         {
             if (fix)
             {
-                var tempstr = str.Replace('/', '\\').ToUpper();
+                var tempstr = str.Replace('/', '\\').ToUpperInvariant();
                 byte[] data = Encoding.ASCII.GetBytes(tempstr);
                 return BitConverter.ToUInt64(ComputeHash(data), 0);
             }

@@ -64,7 +64,7 @@ namespace CASCExplorer
                 else
                     return OpenFileLocal(key);
             }
-            catch
+            catch (Exception exc) when (!(exc is BLTEDecoderException))
             {
                 return OpenFileOnline(key);
             }
@@ -72,23 +72,17 @@ namespace CASCExplorer
 
         protected abstract Stream OpenFileOnline(MD5Hash key);
 
-        protected Stream OpenFileLocalInternal(IndexEntry idxInfo, MD5Hash key)
+        protected Stream OpenFileOnlineInternal(IndexEntry idxInfo, MD5Hash key)
         {
             if (idxInfo != null)
             {
-                using (Stream s = CDNIndex.OpenDataFile(idxInfo))
-                using (BLTEHandler blte = new BLTEHandler(s, key))
-                {
-                    return blte.OpenFile(true);
-                }
+                Stream s = CDNIndex.OpenDataFile(idxInfo);
+                return new BLTEStream(s, key);
             }
             else
             {
-                using (Stream s = CDNIndex.OpenDataFileDirect(key))
-                using (BLTEHandler blte = new BLTEHandler(s, key))
-                {
-                    return blte.OpenFile(true);
-                }
+                Stream s = CDNIndex.OpenDataFileDirect(key);
+                return new BLTEStream(s, key);
             }
         }
 
@@ -96,10 +90,7 @@ namespace CASCExplorer
         {
             Stream stream = GetLocalDataStream(key);
 
-            using (BLTEHandler blte = new BLTEHandler(stream, key))
-            {
-                return blte.OpenFile(true);
-            }
+            return new BLTEStream(stream, key);
         }
 
         protected abstract Stream GetLocalDataStream(MD5Hash key);
@@ -117,7 +108,7 @@ namespace CASCExplorer
                 byte[] md5 = reader.ReadBytes(16);
                 Array.Reverse(md5);
 
-                if (!key.EqualsTo(md5))
+                if (!key.EqualsTo9(md5))
                     throw new Exception("local data corrupted");
 
                 int size = reader.ReadInt32();
@@ -157,7 +148,7 @@ namespace CASCExplorer
             if (idxInfo != null)
             {
                 using (Stream s = CDNIndex.OpenDataFile(idxInfo))
-                using (BLTEHandler blte = new BLTEHandler(s, key))
+                using (BLTEStream blte = new BLTEStream(s, key))
                 {
                     blte.ExtractToFile(path, name);
                 }
@@ -165,7 +156,7 @@ namespace CASCExplorer
             else
             {
                 using (Stream s = CDNIndex.OpenDataFileDirect(key))
-                using (BLTEHandler blte = new BLTEHandler(s, key))
+                using (BLTEStream blte = new BLTEStream(s, key))
                 {
                     blte.ExtractToFile(path, name);
                 }
@@ -176,7 +167,7 @@ namespace CASCExplorer
         {
             Stream stream = GetLocalDataStream(key);
 
-            using (BLTEHandler blte = new BLTEHandler(stream, key))
+            using (BLTEStream blte = new BLTEStream(stream, key))
             {
                 blte.ExtractToFile(path, name);
             }
@@ -184,9 +175,7 @@ namespace CASCExplorer
 
         protected static BinaryReader OpenInstallFile(EncodingHandler enc, CASCHandlerBase casc)
         {
-            EncodingEntry encInfo;
-
-            if (!enc.GetEntry(casc.Config.InstallMD5, out encInfo))
+            if (!enc.GetEntry(casc.Config.InstallMD5, out EncodingEntry encInfo))
                 throw new FileNotFoundException("encoding info for install file missing!");
 
             //ExtractFile(encInfo.Key, ".", "install");
@@ -196,9 +185,7 @@ namespace CASCExplorer
 
         protected BinaryReader OpenDownloadFile(EncodingHandler enc, CASCHandlerBase casc)
         {
-            EncodingEntry encInfo;
-
-            if (!enc.GetEntry(casc.Config.DownloadMD5, out encInfo))
+            if (!enc.GetEntry(casc.Config.DownloadMD5, out EncodingEntry encInfo))
                 throw new FileNotFoundException("encoding info for download file missing!");
 
             //ExtractFile(encInfo.Key, ".", "download");
@@ -208,9 +195,7 @@ namespace CASCExplorer
 
         protected BinaryReader OpenRootFile(EncodingHandler enc, CASCHandlerBase casc)
         {
-            EncodingEntry encInfo;
-
-            if (!enc.GetEntry(casc.Config.RootMD5, out encInfo))
+            if (!enc.GetEntry(casc.Config.RootMD5, out EncodingEntry encInfo))
                 throw new FileNotFoundException("encoding info for root file missing!");
 
             //ExtractFile(encInfo.Key, ".", "root");
@@ -227,9 +212,7 @@ namespace CASCExplorer
 
         private Stream GetDataStream(int index)
         {
-            Stream stream;
-
-            if (DataStreams.TryGetValue(index, out stream))
+            if (DataStreams.TryGetValue(index, out Stream stream))
                 return stream;
 
             string dataFolder = CASCGame.GetDataFolder(Config.GameType);

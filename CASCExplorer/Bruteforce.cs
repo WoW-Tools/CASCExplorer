@@ -98,7 +98,7 @@ namespace CASCExplorer
         {
             sw.Start();
 
-            len = (uint)this.charset.Length;
+            len = (uint)charset.Length;
 
             for (int x = min; x <= max; x++)
             {
@@ -119,7 +119,7 @@ namespace CASCExplorer
             sb.Clear();
             while (power >= 0)
             {
-                sb = sb.Append(this.charset[(int)(l % len)]);
+                sb = sb.Append(charset[(int)(l % len)]);
                 l /= len;
                 power--;
             }

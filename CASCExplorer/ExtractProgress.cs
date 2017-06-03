@@ -1,13 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Windows.Forms;
 
 namespace CASCExplorer
 {
     public partial class ExtractProgress : Form
     {
-        private string ExtractPath;
+        private string ExtractPath
+        {
+            get => textBox1.Text;
+            set => textBox1.Text = value;
+        }
+
         private int NumExtracted;
         private ICollection<CASCFile> files;
         private CASCHandler CASC;
@@ -23,6 +29,7 @@ namespace CASCExplorer
             progressBar1.Value = 0;
             CASC = handler;
             this.files = files;
+            ExtractPath = ExtractPath;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -38,8 +45,6 @@ namespace CASCExplorer
                 return;
 
             ExtractPath = path;
-            textBox1.Text = ExtractPath;
-            button2.Enabled = true;
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -100,6 +105,11 @@ namespace CASCExplorer
             }
 
             Hide();
+        }
+
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+            button2.Enabled = Directory.Exists(ExtractPath);
         }
     }
 }

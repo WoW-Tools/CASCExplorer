@@ -50,18 +50,18 @@ namespace CASCExplorer
     public class PATH_STOP
     {
         public int ItemIndex { get; set; }
-        public int field_4 { get; set; }
-        public int field_8 { get; set; }
-        public int field_C { get; set; }
-        public int field_10 { get; set; }
+        public int Field_4 { get; set; }
+        public int Field_8 { get; set; }
+        public int Field_C { get; set; }
+        public int Field_10 { get; set; }
 
         public PATH_STOP()
         {
             ItemIndex = 0;
-            field_4 = 0;
-            field_8 = 0;
-            field_C = -1;
-            field_10 = -1;
+            Field_4 = 0;
+            Field_8 = 0;
+            Field_C = -1;
+            Field_10 = -1;
         }
     }
 
@@ -109,7 +109,7 @@ namespace CASCExplorer
             int MndxEntriesValid = stream.ReadInt32();                         // Number of valid MNDX root entries
             int MndxEntrySize = stream.ReadInt32();                            // Size of one MNDX root entry
 
-            if (MarInfoCount > CASC_MAX_MAR_FILES || MarInfoSize != Marshal.SizeOf(typeof(MARInfo)))
+            if (MarInfoCount > CASC_MAX_MAR_FILES || MarInfoSize != Marshal.SizeOf<MARInfo>())
                 throw new Exception("invalid root file (1)");
 
             for (int i = 0; i < MarInfoCount; i++)
@@ -209,18 +209,13 @@ namespace CASCExplorer
 
         public override IEnumerable<KeyValuePair<ulong, RootEntry>> GetAllEntries()
         {
-            foreach (var entry in mndxData)
-                yield return entry;
+            return mndxData;
         }
 
         public override IEnumerable<RootEntry> GetAllEntries(ulong hash)
         {
-            RootEntry rootEntry;
-
-            if (mndxData.TryGetValue(hash, out rootEntry))
+            if (mndxData.TryGetValue(hash, out RootEntry rootEntry))
                 yield return rootEntry;
-            else
-                yield break;
         }
 
         public override IEnumerable<RootEntry> GetEntries(ulong hash)
@@ -263,9 +258,10 @@ namespace CASCExplorer
 
         private CASC_ROOT_ENTRY_MNDX FindMNDXInfo(string path, int dwPackage)
         {
-            MNDXSearchResult result = new MNDXSearchResult();
-            result.SearchMask = path.Substring(Packages[dwPackage].Length + 1).ToLower();
-
+            MNDXSearchResult result = new MNDXSearchResult()
+            {
+                SearchMask = path.Substring(Packages[dwPackage].Length + 1).ToLower()
+            };
             MARFileNameDB marFile1 = MarFiles[1];
 
             if (marFile1.FindFileInDatabase(result))
@@ -290,9 +286,10 @@ namespace CASCExplorer
 
         private CASC_ROOT_ENTRY_MNDX FindMNDXInfo2(string path, int dwPackage)
         {
-            MNDXSearchResult result = new MNDXSearchResult();
-            result.SearchMask = path;
-
+            MNDXSearchResult result = new MNDXSearchResult()
+            {
+                SearchMask = path
+            };
             MARFileNameDB marFile2 = MarFiles[2];
 
             if (marFile2.FindFileInDatabase(result))
@@ -339,9 +336,7 @@ namespace CASCExplorer
                 {
                     var localeStr = match1.Success ? match1.Value : match2.Value;
 
-                    LocaleFlags locale;
-
-                    if (!Enum.TryParse(localeStr, true, out locale))
+                    if (!Enum.TryParse(localeStr, true, out LocaleFlags locale))
                         locale = LocaleFlags.All;
 
                     PackagesLocale.Add(result.FileNameIndex, locale);
@@ -846,7 +841,7 @@ namespace CASCExplorer
             {
                 // Binary search
                 // HOTS: 1959FAD
-                if ((eax + 1) < edi)
+                if (eax + 1 < edi)
                 {
                     // HOTS: 1959FB4
                     esi = (edi + eax) >> 1;
@@ -1387,12 +1382,14 @@ namespace CASCExplorer
                 }
 
                 // HOTS: 19594b0
-                PATH_STOP PathStop = new PATH_STOP();
-                PathStop.ItemIndex = pStruct40.ItemIndex;
-                PathStop.field_4 = 0;
-                PathStop.field_8 = pStruct40.NumBytesFound;
-                PathStop.field_C = -1;
-                PathStop.field_10 = -1;
+                PATH_STOP PathStop = new PATH_STOP()
+                {
+                    ItemIndex = pStruct40.ItemIndex,
+                    Field_4 = 0,
+                    Field_8 = pStruct40.NumBytesFound,
+                    Field_C = -1,
+                    Field_10 = -1
+                };
                 pStruct40.AddPathStop(PathStop);
                 pStruct40.ItemCount = 1;
 
@@ -1416,12 +1413,14 @@ namespace CASCExplorer
                     CollisionIndex = sub_1959CB0(pLastStop.ItemIndex) + 1;
 
                     // Insert a new structure
-                    PATH_STOP PathStop = new PATH_STOP();
-                    PathStop.ItemIndex = CollisionIndex - pLastStop.ItemIndex - 1;
-                    PathStop.field_4 = CollisionIndex;
-                    PathStop.field_8 = 0;
-                    PathStop.field_C = -1;
-                    PathStop.field_10 = -1;
+                    PATH_STOP PathStop = new PATH_STOP()
+                    {
+                        ItemIndex = CollisionIndex - pLastStop.ItemIndex - 1,
+                        Field_4 = CollisionIndex,
+                        Field_8 = 0,
+                        Field_C = -1,
+                        Field_10 = -1
+                    };
                     pStruct40.AddPathStop(PathStop);
                 }
 
@@ -1429,7 +1428,7 @@ namespace CASCExplorer
                 PATH_STOP pPathStop = pStruct40.GetPathStop(pStruct40.ItemCount);
 
                 // HOTS: 19595CC
-                if (Struct68_00.Contains(pPathStop.field_4++))
+                if (Struct68_00.Contains(pPathStop.Field_4++))
                 {
                     // HOTS: 19595F2
                     pStruct40.ItemCount++;
@@ -1437,13 +1436,13 @@ namespace CASCExplorer
                     if (Struct68_D0.Contains(pPathStop.ItemIndex))
                     {
                         // HOTS: 1959617
-                        if (pPathStop.field_C == -1)
-                            pPathStop.field_C = Struct68_D0.GetItemValue(pPathStop.ItemIndex);
+                        if (pPathStop.Field_C == -1)
+                            pPathStop.Field_C = Struct68_D0.GetItemValue(pPathStop.ItemIndex);
                         else
-                            pPathStop.field_C++;
+                            pPathStop.Field_C++;
 
                         // HOTS: 1959630
-                        int FragOffs = GetNameFragmentOffsetEx(pPathStop.ItemIndex, pPathStop.field_C);
+                        int FragOffs = GetNameFragmentOffsetEx(pPathStop.ItemIndex, pPathStop.Field_C);
                         if (NextDB != null)
                         {
                             // HOTS: 1959649
@@ -1463,24 +1462,24 @@ namespace CASCExplorer
                     }
 
                     // HOTS: 19596AE
-                    pPathStop.field_8 = pStruct40.NumBytesFound;
+                    pPathStop.Field_8 = pStruct40.NumBytesFound;
 
                     // HOTS: 19596b6
                     if (FileNameIndexes.Contains(pPathStop.ItemIndex))
                     {
                         // HOTS: 19596D1
-                        if (pPathStop.field_10 == -1)
+                        if (pPathStop.Field_10 == -1)
                         {
                             // HOTS: 19596D9
-                            pPathStop.field_10 = FileNameIndexes.GetItemValue(pPathStop.ItemIndex);
+                            pPathStop.Field_10 = FileNameIndexes.GetItemValue(pPathStop.ItemIndex);
                         }
                         else
                         {
-                            pPathStop.field_10++;
+                            pPathStop.Field_10++;
                         }
 
                         // HOTS: 1959755
-                        pStruct1C.SetFindResult(pStruct40.Result, pPathStop.field_10);
+                        pStruct1C.SetFindResult(pStruct40.Result, pPathStop.Field_10);
                         return true;
                     }
                 }
@@ -1498,7 +1497,7 @@ namespace CASCExplorer
                     pPathStop.ItemIndex++;
 
                     pPathStop = pStruct40.GetPathStop(pStruct40.ItemCount - 2);
-                    int edi = pPathStop.field_8;
+                    int edi = pPathStop.Field_8;
 
                     // HOTS: 1959749
                     pStruct40.RemoveRange(edi);
@@ -2091,12 +2090,9 @@ namespace CASCExplorer
             get { return szSearchMask; }
             set
             {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(SearchMask));
-
                 Buffer.Init();
 
-                szSearchMask = value;
+                szSearchMask = value ?? throw new ArgumentNullException(nameof(SearchMask));
             }
         }
         public string FoundPath { get; private set; }       // Found path name

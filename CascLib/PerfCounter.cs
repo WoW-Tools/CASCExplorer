@@ -3,10 +3,10 @@ using System.Diagnostics;
 
 namespace CASCExplorer
 {
-    class PerfCounter : IDisposable
+    public sealed class PerfCounter : IDisposable
     {
-        Stopwatch _sw;
-        string _name;
+        private Stopwatch _sw;
+        private string _name;
 
         public PerfCounter(string name)
         {

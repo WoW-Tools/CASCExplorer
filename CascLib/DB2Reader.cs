@@ -8,10 +8,10 @@ namespace CASCExplorer
 {
     public class DB2Row
     {
-        private byte[] m_data;
-        private DB2Reader m_reader;
+        private readonly byte[] m_data;
+        private readonly DB2Reader m_reader;
 
-        public byte[] Data { get { return m_data; } }
+        public byte[] Data => m_data;
 
         public DB2Row(DB2Reader reader, byte[] data)
         {
@@ -58,7 +58,7 @@ namespace CASCExplorer
         private readonly DB2Row[] m_rows;
         public byte[] StringTable { get; private set; }
 
-        Dictionary<int, DB2Row> m_index = new Dictionary<int, DB2Row>();
+        readonly Dictionary<int, DB2Row> m_index = new Dictionary<int, DB2Row>();
 
         public DB2Reader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
 
@@ -129,8 +129,7 @@ namespace CASCExplorer
 
         public DB2Row GetRow(int index)
         {
-            DB2Row row;
-            m_index.TryGetValue(index, out row);
+            m_index.TryGetValue(index, out DB2Row row);
             return row;
         }
 

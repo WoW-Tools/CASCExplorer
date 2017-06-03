@@ -13,7 +13,8 @@ namespace CASCExplorer
         Hearthstone,
         Overwatch,
         Bna,
-        Client
+        Client,
+        S1
     }
 
     public class CASCGame
@@ -49,8 +50,11 @@ namespace CASCExplorer
                 if (File.Exists(Path.Combine(path, "Battle.net.exe")))
                     return CASCGameType.Bna;
 
-                if (File.Exists(Path.Combine(path, "Overwatch Launcher.exe")))
+                if (File.Exists(Path.Combine(path, "Overwatch.exe")))
                     return CASCGameType.Overwatch;
+
+                if (File.Exists(Path.Combine(path, "StarCraft.exe")))
+                    return CASCGameType.S1;
             }
 
             return CASCGameType.Unknown;
@@ -63,6 +67,9 @@ namespace CASCExplorer
 
             if (uid.StartsWith("hs"))
                 return CASCGameType.Hearthstone;
+
+            if (uid.StartsWith("s1"))
+                return CASCGameType.S1;
 
             if (uid.StartsWith("s2"))
                 return CASCGameType.S2;

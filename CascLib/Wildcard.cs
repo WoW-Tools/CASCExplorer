@@ -22,7 +22,7 @@ namespace CASCExplorer
         /// </summary>
         /// <param name="pattern">The wildcard pattern to match.</param>
         /// <param name="options">A combination of one or more
-        /// <see cref="System.Text.RegexOptions"/>.</param>
+        /// <see cref="RegexOptions"/>.</param>
         public Wildcard(string pattern, bool matchStartEnd, RegexOptions options)
          : base(WildcardToRegex(pattern, matchStartEnd), options)
         {
@@ -37,8 +37,7 @@ namespace CASCExplorer
         {
             if (matchStartEnd)
                 return "^" + Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
-            else
-                return Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".");
+            return Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".");
         }
     }
 }
