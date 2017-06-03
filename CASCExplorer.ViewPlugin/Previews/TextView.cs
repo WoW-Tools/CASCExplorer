@@ -8,9 +8,9 @@ using System.ComponentModel.Composition;
 
 namespace CASCExplorer.DefaultViews.Previews
 {
-    [Export(typeof(IPreviw))]
+    [Export(typeof(IPreview))]
     [ExportMetadata("Extensions", new string[] { ".txt", ".ini", ".wtf", ".lua", ".toc", ".xml", ".htm", ".html", ".lst" })]
-    public partial class TextView : UserControl, IPreviw
+    public partial class TextView : UserControl, IPreview
     {
         byte[] m_bytes;
 

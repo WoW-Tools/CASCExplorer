@@ -8,7 +8,7 @@ namespace CASCExplorer.ViewPlugin
         string[] Extensions { get; }
     }
 
-    public interface IPreviw
+    public interface IPreview
     {
         Control Show(Stream stream, string fileName);
     }

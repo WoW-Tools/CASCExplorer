@@ -36,7 +36,7 @@ namespace CASCExplorer
         private AggregateCatalog m_catalog;
 
         [ImportMany(AllowRecomposition = true)]
-        private List<Lazy<IPreviw, IExtensions>> ViewPlugins { get; set; }
+        private List<Lazy<IPreview, IExtensions>> ViewPlugins { get; set; }
 
         private Control m_currentControl;
 
@@ -380,7 +380,7 @@ namespace CASCExplorer
             MessageBox.Show(string.Format(sizeNumberFmt, "{0:N} bytes", size));
         }
 
-        private void ExecPlugin(IPreviw plugin, ICASCEntry file)
+        private void ExecPlugin(IPreview plugin, ICASCEntry file)
         {
             try
             {
