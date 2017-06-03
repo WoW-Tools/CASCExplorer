@@ -45,6 +45,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -79,12 +80,6 @@
     <Compile Include="ExtractProgress.Designer.cs">
       <DependentUpon>ExtractProgress.cs</DependentUpon>
     </Compile>
-    <Compile Include="ImagePreviewForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ImagePreviewForm.Designer.cs">
-      <DependentUpon>ImagePreviewForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="InitForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -98,7 +93,7 @@
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="NoFlickerListView.cs">
-      <SubType>component</SubType>
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -128,9 +123,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ExtractProgress.resx">
       <DependentUpon>ExtractProgress.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ImagePreviewForm.resx">
-      <DependentUpon>ImagePreviewForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="InitForm.resx">
       <DependentUpon>InitForm.cs</DependentUpon>
@@ -178,9 +170,9 @@
       <Project>{E08E1E48-6585-4137-8405-661C62C10713}</Project>
       <Name>CascLib</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SereniaBLPLib\SereniaBLPLib\SereniaBLPLib.csproj">
-      <Project>{4ED9F877-A9BB-470F-B35C-694147472080}</Project>
-      <Name>SereniaBLPLib</Name>
+    <ProjectReference Include="..\CASCExplorer.ViewPlugin\CASCExplorer.ViewPlugin.csproj">
+      <Project>{63C32AC8-2EE2-4DB7-99C5-84FD815AADC3}</Project>
+      <Name>CASCExplorer.ViewPlugin</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

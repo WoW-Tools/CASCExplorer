@@ -33,6 +33,7 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.folderTree = new System.Windows.Forms.TreeView();
             this.iconsList = new System.Windows.Forms.ImageList(this.components);
+            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.fileList = new CASCExplorer.NoFlickerListView();
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -59,6 +60,7 @@
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.localeFlagsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.useLVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tsmShowPreview = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.scanFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.analyseUnknownFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -80,6 +82,9 @@
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
+            this.splitContainer2.Panel1.SuspendLayout();
+            this.splitContainer2.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
             this.toolStripContainer1.BottomToolStripPanel.SuspendLayout();
             this.toolStripContainer1.ContentPanel.SuspendLayout();
@@ -104,8 +109,8 @@
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.fileList);
-            this.splitContainer1.Size = new System.Drawing.Size(838, 466);
+            this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
+            this.splitContainer1.Size = new System.Drawing.Size(935, 466);
             this.splitContainer1.SplitterDistance = 212;
             this.splitContainer1.TabIndex = 0;
             // 
@@ -130,6 +135,23 @@
             this.iconsList.ImageSize = new System.Drawing.Size(15, 15);
             this.iconsList.TransparentColor = System.Drawing.Color.Transparent;
             // 
+            // splitContainer2
+            // 
+            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer2.Name = "splitContainer2";
+            // 
+            // splitContainer2.Panel1
+            // 
+            this.splitContainer2.Panel1.Controls.Add(this.fileList);
+            // 
+            // splitContainer2.Panel2
+            // 
+            this.splitContainer2.Panel2.AutoScroll = true;
+            this.splitContainer2.Size = new System.Drawing.Size(719, 466);
+            this.splitContainer2.SplitterDistance = 428;
+            this.splitContainer2.TabIndex = 1;
+            // 
             // fileList
             // 
             this.fileList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
@@ -145,7 +167,7 @@
             this.fileList.Location = new System.Drawing.Point(0, 0);
             this.fileList.Name = "fileList";
             this.fileList.SelectedIndex = -1;
-            this.fileList.Size = new System.Drawing.Size(622, 466);
+            this.fileList.Size = new System.Drawing.Size(428, 466);
             this.fileList.SmallImageList = this.iconsList;
             this.fileList.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.fileList.TabIndex = 0;
@@ -155,6 +177,7 @@
             this.fileList.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listView1_ColumnClick);
             this.fileList.RetrieveVirtualItem += new System.Windows.Forms.RetrieveVirtualItemEventHandler(this.listView1_RetrieveVirtualItem);
             this.fileList.SearchForVirtualItem += new System.Windows.Forms.SearchForVirtualItemEventHandler(this.fileList_SearchForVirtualItem);
+            this.fileList.SelectedIndexChanged += new System.EventHandler(this.listView1_SelectedIndexChanged);
             this.fileList.KeyDown += new System.Windows.Forms.KeyEventHandler(this.listView1_KeyDown);
             this.fileList.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listView1_MouseDoubleClick);
             // 
@@ -224,11 +247,11 @@
             // toolStripContainer1.ContentPanel
             // 
             this.toolStripContainer1.ContentPanel.Controls.Add(this.splitContainer1);
-            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(838, 466);
+            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(935, 466);
             this.toolStripContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.toolStripContainer1.Location = new System.Drawing.Point(0, 0);
             this.toolStripContainer1.Name = "toolStripContainer1";
-            this.toolStripContainer1.Size = new System.Drawing.Size(838, 537);
+            this.toolStripContainer1.Size = new System.Drawing.Size(935, 537);
             this.toolStripContainer1.TabIndex = 3;
             this.toolStripContainer1.Text = "toolStripContainer1";
             // 
@@ -246,7 +269,7 @@
             this.statusProgress});
             this.statusStrip1.Location = new System.Drawing.Point(0, 0);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(838, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(935, 22);
             this.statusStrip1.TabIndex = 0;
             // 
             // statusLabel
@@ -272,7 +295,7 @@
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(838, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(935, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -344,7 +367,8 @@
             // 
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.localeFlagsToolStripMenuItem,
-            this.useLVToolStripMenuItem});
+            this.useLVToolStripMenuItem,
+            this.tsmShowPreview});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
@@ -353,7 +377,7 @@
             // 
             this.localeFlagsToolStripMenuItem.Enabled = false;
             this.localeFlagsToolStripMenuItem.Name = "localeFlagsToolStripMenuItem";
-            this.localeFlagsToolStripMenuItem.Size = new System.Drawing.Size(108, 22);
+            this.localeFlagsToolStripMenuItem.Size = new System.Drawing.Size(147, 22);
             this.localeFlagsToolStripMenuItem.Text = "Locale";
             this.localeFlagsToolStripMenuItem.DropDownItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.localeToolStripMenuItem_DropDownItemClicked);
             // 
@@ -361,9 +385,19 @@
             // 
             this.useLVToolStripMenuItem.Enabled = false;
             this.useLVToolStripMenuItem.Name = "useLVToolStripMenuItem";
-            this.useLVToolStripMenuItem.Size = new System.Drawing.Size(108, 22);
+            this.useLVToolStripMenuItem.Size = new System.Drawing.Size(147, 22);
             this.useLVToolStripMenuItem.Text = "Use LV";
             this.useLVToolStripMenuItem.Click += new System.EventHandler(this.contentFlagsToolStripMenuItem_Click);
+            // 
+            // tsmShowPreview
+            // 
+            this.tsmShowPreview.Checked = true;
+            this.tsmShowPreview.CheckOnClick = true;
+            this.tsmShowPreview.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.tsmShowPreview.Name = "tsmShowPreview";
+            this.tsmShowPreview.Size = new System.Drawing.Size(147, 22);
+            this.tsmShowPreview.Text = "Show preview";
+            this.tsmShowPreview.CheckedChanged += new System.EventHandler(this.tsmShowPreview_CheckedChanged);
             // 
             // toolsToolStripMenuItem
             // 
@@ -505,7 +539,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(838, 537);
+            this.ClientSize = new System.Drawing.Size(935, 537);
             this.Controls.Add(this.toolStripContainer1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
@@ -515,6 +549,9 @@
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
+            this.splitContainer2.Panel1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
+            this.splitContainer2.ResumeLayout(false);
             this.contextMenuStrip1.ResumeLayout(false);
             this.toolStripContainer1.BottomToolStripPanel.ResumeLayout(false);
             this.toolStripContainer1.BottomToolStripPanel.PerformLayout();
@@ -539,7 +576,6 @@
 
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TreeView folderTree;
-        private NoFlickerListView fileList;
         private System.Windows.Forms.ImageList iconsList;
         private System.Windows.Forms.ToolStripContainer toolStripContainer1;
         private System.Windows.Forms.StatusStrip statusStrip1;
@@ -548,22 +584,17 @@
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.ToolStripStatusLabel statusLabel;
         private System.Windows.Forms.ToolStripProgressBar statusProgress;
-        private System.Windows.Forms.ColumnHeader columnHeader1;
-        private System.Windows.Forms.ColumnHeader columnHeader2;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem extractToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
-        private System.Windows.Forms.ColumnHeader columnHeader3;
         private System.Windows.Forms.ToolStripMenuItem copyNameToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem scanFilesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem analyseUnknownFilesToolStripMenuItem;
-        private System.Windows.Forms.ColumnHeader columnHeader4;
         private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem localeFlagsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem getSizeToolStripMenuItem;
-        private System.Windows.Forms.ColumnHeader columnHeader5;
         private System.Windows.Forms.ToolStripMenuItem useLVToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openStorageToolStripMenuItem;
         private System.Windows.Forms.FolderBrowserDialog storageFolderBrowserDialog;
@@ -583,6 +614,14 @@
         private System.Windows.Forms.ToolStrip toolStrip2;
         private System.Windows.Forms.ToolStripButton openStorageToolStripButton;
         private System.Windows.Forms.ToolStripMenuItem exportFoldersToolStripMenuItem;
+        private System.Windows.Forms.SplitContainer splitContainer2;
+        private NoFlickerListView fileList;
+        private System.Windows.Forms.ColumnHeader columnHeader1;
+        private System.Windows.Forms.ColumnHeader columnHeader2;
+        private System.Windows.Forms.ColumnHeader columnHeader3;
+        private System.Windows.Forms.ColumnHeader columnHeader5;
+        private System.Windows.Forms.ColumnHeader columnHeader4;
+        private System.Windows.Forms.ToolStripMenuItem tsmShowPreview;
     }
 }
 
