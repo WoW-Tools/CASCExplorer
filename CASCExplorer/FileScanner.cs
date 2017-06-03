@@ -36,6 +36,9 @@ namespace CASCExplorer
             { new byte[] { 0x45, 0x45, 0x44, 0x43 }, ".eedc" },
             { new byte[] { 0x49, 0x44, 0x33       }, ".mp3"  },
             { new byte[] { 0xff, 0xfb             }, ".mp3"  },
+            { new byte[] { 0x52, 0x45, 0x56, 0x4D }, ".wmo"  },
+            { new byte[] { 0x00, 0x00, 0x00, 0x01 }, ".anim" },
+            { new byte[] { 0x00, 0x00, 0x00, 0x00 }, ".anim" },
         };
 
         private CASCHandler CASC;
