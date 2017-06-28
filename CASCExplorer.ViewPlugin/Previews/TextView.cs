@@ -9,7 +9,7 @@ using System.ComponentModel.Composition;
 namespace CASCExplorer.DefaultViews.Previews
 {
     [Export(typeof(IPreview))]
-    [ExportMetadata("Extensions", new string[] { ".txt", ".ini", ".wtf", ".lua", ".toc", ".xml", ".htm", ".html", ".lst" })]
+    [ExportMetadata("Extensions", new string[] { ".txt", ".ini", ".wtf", ".lua", ".toc", ".xml", ".htm", ".html", ".lst", ".signed" })]
     public partial class TextView : UserControl, IPreview
     {
         byte[] m_bytes;

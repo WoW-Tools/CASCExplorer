@@ -39,6 +39,8 @@ namespace CASCExplorer
             { new byte[] { 0x52, 0x45, 0x56, 0x4D }, ".wmo"  },
             { new byte[] { 0x00, 0x00, 0x00, 0x01 }, ".anim" },
             { new byte[] { 0x00, 0x00, 0x00, 0x00 }, ".anim" },
+            { new byte[] { 0x3C, 0x68, 0x74, 0x6D }, ".html" },
+            { new byte[] { 0xEF, 0xBB, 0xBF, 0x3C, 0x68, 0x74, 0x6D }, ".html" },
         };
 
         private CASCHandler CASC;
@@ -157,9 +159,9 @@ namespace CASCExplorer
             {
                 using (Stream stream = CASC.OpenFile(file.Hash))
                 {
-                    byte[] magic = new byte[4];
+                    byte[] magic = new byte[8];
 
-                    stream.Read(magic, 0, 4);
+                    stream.Read(magic, 0, 8);
 
                     foreach (var number in MagicNumbers)
                     {
