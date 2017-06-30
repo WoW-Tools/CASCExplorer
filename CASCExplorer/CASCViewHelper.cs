@@ -151,13 +151,15 @@ namespace CASCExplorer
                         }
                     }
 
-                    if (_casc.FileExists("DBFilesClient\\SoundKit.db2") && _casc.FileExists("DBFilesClient\\SoundKitEntry.db2"))
+                    if (_casc.FileExists("DBFilesClient\\SoundKit.db2") && _casc.FileExists("DBFilesClient\\SoundKitEntry.db2") && _casc.FileExists("DBFilesClient\\SoundKitName.db2"))
                     {
                         using (Stream skStream = _casc.OpenFile("DBFilesClient\\SoundKit.db2"))
                         using (Stream skeStream = _casc.OpenFile("DBFilesClient\\SoundKitEntry.db2"))
+                        using (Stream sknStream = _casc.OpenFile("DBFilesClient\\SoundKitName.db2"))
                         {
                             DB6Reader sk = new DB6Reader(skStream);
                             DB6Reader ske = new DB6Reader(skeStream);
+                            DB6Reader skn = new DB6Reader(sknStream);
 
                             Dictionary<int, List<int>> lookup = new Dictionary<int, List<int>>();
 
@@ -173,9 +175,10 @@ namespace CASCExplorer
 
                             foreach (var row in sk)
                             {
-                                string name = row.Value.GetField<string>(0).Replace(':', '_');
+                                string name = skn.GetRow(row.Key).GetField<string>(0).Replace(':', '_');
+                                //string name = row.Value.GetField<string>(0).Replace(':', '_');
 
-                                int type = row.Value.GetField<byte>(12);
+                                int type = row.Value.GetField<byte>(6);
 
                                 if (!lookup.TryGetValue(row.Key, out List<int> ske_entries))
                                     continue;
