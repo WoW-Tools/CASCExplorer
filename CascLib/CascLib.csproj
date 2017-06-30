@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="WC3RootHandler.cs" />
     <Compile Include="S1RootHandler.cs" />
     <Compile Include="BackgroundWorkerEx.cs">
       <SubType>Component</SubType>

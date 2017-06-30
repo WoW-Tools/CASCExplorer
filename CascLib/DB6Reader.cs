@@ -251,9 +251,11 @@ namespace CASCExplorer
                             {
                                 case 1: // 2 bytes
                                     data = reader.ReadBytes(2);
+                                    reader.ReadBytes(2);
                                     break;
                                 case 2: // 1 bytes
                                     data = reader.ReadBytes(1);
+                                    reader.ReadBytes(3);
                                     break;
                                 case 3: // 4 bytes
                                 case 4:

@@ -58,7 +58,7 @@
     <Compile Include="Previews\HexView.Designer.cs">
       <DependentUpon>HexView.cs</DependentUpon>
     </Compile>
-    <Compile Include="IPreviw.cs" />
+    <Compile Include="IPreview.cs" />
     <Compile Include="Previews\TextView.cs">
       <SubType>UserControl</SubType>
     </Compile>

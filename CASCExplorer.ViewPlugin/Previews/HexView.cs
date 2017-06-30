@@ -8,9 +8,9 @@ using System.Text;
 
 namespace CASCExplorer.DefaultViews.Previews
 {
-    [Export(typeof(IPreviw))]
+    [Export(typeof(IPreview))]
     [ExportMetadata("Extensions", null)]
-    public partial class HexView : UserControl, IPreviw
+    public partial class HexView : UserControl, IPreview
     {
         byte[] m_bytes;
 

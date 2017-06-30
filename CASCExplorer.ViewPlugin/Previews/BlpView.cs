@@ -10,9 +10,9 @@ using System.Drawing.Imaging;
 
 namespace CASCExplorer.DefaultViews.Previews
 {
-    [Export(typeof(IPreviw))]
+    [Export(typeof(IPreview))]
     [ExportMetadata("Extensions", new string[] { ".blp" })]
-    public partial class BlpView : UserControl, IPreviw
+    public partial class BlpView : UserControl, IPreview
     {
         List<Bitmap> m_mips = new List<Bitmap>();
         string m_fileName;

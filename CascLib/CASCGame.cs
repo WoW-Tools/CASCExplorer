@@ -14,7 +14,8 @@ namespace CASCExplorer
         Overwatch,
         Bna,
         Client,
-        S1
+        S1,
+        WC3
     }
 
     public class CASCGame
@@ -29,6 +30,9 @@ namespace CASCExplorer
 
             if (Directory.Exists(Path.Combine(path, "Hearthstone_Data")))
                 return CASCGameType.Hearthstone;
+
+            if (File.Exists(Path.Combine(path, "Warcraft III.exe")))
+                return CASCGameType.WC3;
 
             if (Directory.Exists(Path.Combine(path, "Data")))
             {
@@ -67,6 +71,9 @@ namespace CASCExplorer
 
             if (uid.StartsWith("hs"))
                 return CASCGameType.Hearthstone;
+
+            if (uid.StartsWith("w3"))
+                return CASCGameType.WC3;
 
             if (uid.StartsWith("s1"))
                 return CASCGameType.S1;
