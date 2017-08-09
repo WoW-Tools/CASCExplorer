@@ -128,6 +128,8 @@ namespace CASCExplorer
                 gameType == CASCGameType.WoW ||
                 gameType == CASCGameType.HotS ||
                 gameType == CASCGameType.S2 ||
+                gameType == CASCGameType.S1 ||
+                gameType == CASCGameType.WC3 ||
                 gameType == CASCGameType.Overwatch;
         }
     }

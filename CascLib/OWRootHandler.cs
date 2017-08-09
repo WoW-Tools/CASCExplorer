@@ -159,7 +159,7 @@ namespace CASCExplorer
         // Returns only entries that match current locale and content flags
         public override IEnumerable<RootEntry> GetEntries(ulong hash)
         {
-            return GetAllEntries(hash);
+            return GetEntriesForSelectedLocale(hash);
         }
 
         public bool GetEntry(ulong hash, out OWRootEntry entry)

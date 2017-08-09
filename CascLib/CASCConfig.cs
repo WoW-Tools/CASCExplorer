@@ -160,6 +160,8 @@ namespace CASCExplorer
             config.GameType = CASCGame.DetectOnlineGame(product);
 
             string cdnKey = config._VersionsData[config._versionsIndex]["CDNConfig"].ToLower();
+            //string cdnKey = "d583ee15a02b81cc494aeeef8d195059";
+            //string cdnKey = "8c4ac7ab2f96ab75dab58448ffd07842";
             using (Stream stream = CDNIndexHandler.OpenConfigFileDirect(config, cdnKey))
             {
                 config._CDNConfig = KeyValueConfig.ReadKeyValueConfig(stream);
@@ -199,6 +201,8 @@ namespace CASCExplorer
             }
 
             string buildKey = config._VersionsData[config._versionsIndex]["BuildConfig"].ToLower();
+            //string buildKey = "2e1db4da3a538cd52521b73040bdb162";
+            //string buildKey = "f639eab0a11d5b7a9099bc188badaa2e";
             using (Stream stream = CDNIndexHandler.OpenConfigFileDirect(config, buildKey))
             {
                 var cfg = KeyValueConfig.ReadKeyValueConfig(stream);

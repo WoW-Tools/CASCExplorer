@@ -227,7 +227,8 @@ namespace CASCExplorer
             //    yield return rootEntry;
             //else
             //    yield break;
-            return GetAllEntries(hash);
+            //return GetAllEntries(hash);
+            return GetEntriesForSelectedLocale(hash);
         }
 
         private int FindMNDXPackage(string fileName)

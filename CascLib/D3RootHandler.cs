@@ -153,15 +153,7 @@ namespace CASCExplorer
 
         public override IEnumerable<RootEntry> GetEntries(ulong hash)
         {
-            var rootInfos = GetAllEntries(hash);
-
-            if (!rootInfos.Any())
-                yield break;
-
-            var rootInfosLocale = rootInfos.Where(re => (re.LocaleFlags & Locale) != 0);
-
-            foreach (var entry in rootInfosLocale)
-                yield return entry;
+            return GetEntriesForSelectedLocale(hash);
         }
 
         private void AddFile(string pkg, D3RootEntry e)
