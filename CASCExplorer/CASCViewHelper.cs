@@ -224,7 +224,10 @@ namespace CASCExplorer
                             using (var m2file = _casc.OpenFile(unknownFile.Hash))
                             using (var br = new BinaryReader(m2file))
                             {
-                                m2file.Position = 0x138;
+                                m2file.Position = 0x14;
+                                int nameOffs = br.ReadInt32();
+
+                                m2file.Position = nameOffs + 8; // + sizeof(MD21)
                                 string m2name = br.ReadCString();
 
                                 unknownFile.FullName = "unknown\\" + m2name + ".m2";

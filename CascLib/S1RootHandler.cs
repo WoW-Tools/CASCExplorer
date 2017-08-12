@@ -66,7 +66,7 @@ namespace CASCExplorer
         // Returns only entries that match current locale and content flags
         public override IEnumerable<RootEntry> GetEntries(ulong hash)
         {
-            return GetAllEntries(hash);
+            return GetEntriesForSelectedLocale(hash);
         }
 
         public override void LoadListFile(string path, BackgroundWorkerEx worker = null)
