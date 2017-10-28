@@ -30,7 +30,7 @@
         {
             this.label1 = new System.Windows.Forms.Label();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
-            this.backgroundWorker1 = new CASCExplorer.BackgroundWorkerEx();
+            this.backgroundWorker1 = new CASCLib.BackgroundWorkerEx();
             this.SuspendLayout();
             // 
             // label1
@@ -81,6 +81,6 @@
 
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ProgressBar progressBar1;
-        private BackgroundWorkerEx backgroundWorker1;
+        private CASCLib.BackgroundWorkerEx backgroundWorker1;
     }
 }

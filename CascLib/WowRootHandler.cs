@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     [Flags]
     public enum LocaleFlags : uint
@@ -240,13 +240,13 @@ namespace CASCExplorer
                                 continue;
                             }
 
-                            CASCFile.FileNames[fileHash] = fileNameFull;
+                            CASCFile.Files[fileHash] = new CASCFile(fileHash, fileNameFull);
                         }
 
                         worker?.ReportProgress((int)(fs.Position / (float)fs.Length * 100));
                     }
 
-                    Logger.WriteLine("WowRootHandler: loaded {0} valid file names", CASCFile.FileNames.Count);
+                    Logger.WriteLine("WowRootHandler: loaded {0} valid file names", CASCFile.Files.Count);
                 }
             }
 
@@ -280,7 +280,7 @@ namespace CASCExplorer
                         continue;
                     }
 
-                    CASCFile.FileNames[fileHash] = fullname;
+                    CASCFile.Files[fileHash] = new CASCFile(fileHash, fullname);
                 }
             }
         }
@@ -324,7 +324,7 @@ namespace CASCExplorer
                             continue;
                         }
 
-                        CASCFile.FileNames[fileHash] = file;
+                        CASCFile.Files[fileHash] = new CASCFile(fileHash, file);
 
                         int dirSepIndex = file.LastIndexOf('\\');
 
@@ -362,7 +362,7 @@ namespace CASCExplorer
                         }
                     }
 
-                    Logger.WriteLine("WowRootHandler: loaded {0} valid file names", CASCFile.FileNames.Count);
+                    Logger.WriteLine("WowRootHandler: loaded {0} valid file names", CASCFile.Files.Count);
                 }
 
                 File.SetLastWriteTime("listfile.bin", File.GetLastWriteTime(path));
@@ -393,14 +393,18 @@ namespace CASCExplorer
                 if (!rootInfosLocale.Any())
                     continue;
 
-                if (!CASCFile.FileNames.TryGetValue(rootEntry.Key, out string file))
+                string filename;
+
+                if (!CASCFile.Files.TryGetValue(rootEntry.Key, out CASCFile file))
                 {
-                    file = "unknown\\" + rootEntry.Key.ToString("X16") + "_" + GetFileDataIdByHash(rootEntry.Key);
+                    filename = "unknown\\" + rootEntry.Key.ToString("X16") + "_" + GetFileDataIdByHash(rootEntry.Key);
 
                     UnknownFiles.Add(rootEntry.Key);
                 }
+                else
+                    filename = file.FullName;
 
-                CreateSubTree(root, rootEntry.Key, file);
+                CreateSubTree(root, rootEntry.Key, filename);
                 CountSelect++;
             }
 
@@ -423,15 +427,19 @@ namespace CASCExplorer
             UnknownFiles = null;
             Root?.Entries.Clear();
             Root = null;
-            CASCFile.FileNames.Clear();
+            CASCFile.Files.Clear();
         }
 
         public override void Dump()
         {
             foreach (var fd in RootData.OrderBy(r => GetFileDataIdByHash(r.Key)))
             {
-                if (!CASCFile.FileNames.TryGetValue(fd.Key, out string name))
+                string name;
+
+                if (!CASCFile.Files.TryGetValue(fd.Key, out CASCFile file))
                     name = fd.Key.ToString("X16");
+                else
+                    name = file.FullName;
 
                 Logger.WriteLine("{0:D7} {1:X16} {2} {3}", GetFileDataIdByHash(fd.Key), fd.Key, fd.Value.Aggregate(LocaleFlags.None, (a, b) => a | b.LocaleFlags), name);
 

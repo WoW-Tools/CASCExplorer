@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     /// <summary>
     /// Represents a wildcard running on the

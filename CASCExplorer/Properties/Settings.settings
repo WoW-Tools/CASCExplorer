@@ -2,10 +2,10 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="CASCExplorer.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="LocaleFlags" Type="CASCExplorer.LocaleFlags" Scope="User">
+    <Setting Name="LocaleFlags" Type="CASCLib.LocaleFlags" Scope="User">
       <Value Profile="(Default)">enUS</Value>
     </Setting>
-    <Setting Name="ContentFlags" Type="CASCExplorer.ContentFlags" Scope="User">
+    <Setting Name="ContentFlags" Type="CASCLib.ContentFlags" Scope="User">
       <Value Profile="(Default)">None</Value>
     </Setting>
     <Setting Name="RecentStorages" Type="System.Collections.Specialized.StringCollection" Scope="User">

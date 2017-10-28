@@ -11,7 +11,7 @@
     <Setting Name="Product" Type="System.String" Scope="User">
       <Value Profile="(Default)">wow</Value>
     </Setting>
-    <Setting Name="Locale" Type="CASCExplorer.LocaleFlags" Scope="User">
+    <Setting Name="Locale" Type="CASCLib.LocaleFlags" Scope="User">
       <Value Profile="(Default)">enUS</Value>
     </Setting>
   </Settings>

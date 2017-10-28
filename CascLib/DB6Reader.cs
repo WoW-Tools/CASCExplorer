@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     public class DB6Row
     {
@@ -251,11 +251,11 @@ namespace CASCExplorer
                             {
                                 case 1: // 2 bytes
                                     data = reader.ReadBytes(2);
-                                    reader.ReadBytes(2);
+                                    reader.Skip(2); // 7.3 fix
                                     break;
                                 case 2: // 1 bytes
                                     data = reader.ReadBytes(1);
-                                    reader.ReadBytes(3);
+                                    reader.Skip(3); // 7.3 fix
                                     break;
                                 case 3: // 4 bytes
                                 case 4:

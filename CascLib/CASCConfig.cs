@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     [Flags]
     public enum LoadFlags
@@ -127,6 +127,7 @@ namespace CASCExplorer
         public CASCGameType GameType { get; private set; }
         public static bool ValidateData { get; set; } = true;
         public static bool ThrowOnFileNotFound { get; set; } = true;
+        public static bool ThrowOnMissingDecryptionKey { get; set; } = true;
         public static LoadFlags LoadFlags { get; set; } = LoadFlags.None;
 
         private int _versionsIndex;
@@ -316,8 +317,19 @@ namespace CASCExplorer
                 {
                     for (int i = 0; i < _CDNData.Count; i++)
                     {
-                        if (_CDNData[i]["Name"] == Region)
-                            return _CDNData[i]["Hosts"].Split(' ')[0]; // use first
+                        var cdn = _CDNData[i];
+
+                        if (cdn["Name"] == Region)
+                        {
+                            var hosts = cdn["Hosts"].Split(' ');
+
+                            for (int j = 0; j < hosts.Length; j++)
+                            {
+                                if (hosts[j].Contains("edgecast"))
+                                    continue;
+                                return hosts[j];
+                            }
+                        }
                     }
                     return _CDNData[0]["Hosts"].Split(' ')[0]; // use first
                 }

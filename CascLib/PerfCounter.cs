@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     public sealed class PerfCounter : IDisposable
     {

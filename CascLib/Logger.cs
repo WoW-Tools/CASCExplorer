@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     public class Logger
     {

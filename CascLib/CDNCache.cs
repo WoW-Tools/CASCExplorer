@@ -3,7 +3,7 @@ using System.IO;
 using System.Net;
 using System.Security.Cryptography;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     public class CacheMetaData
     {

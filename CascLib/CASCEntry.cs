@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     public interface ICASCEntry
     {
@@ -85,18 +85,20 @@ namespace CASCExplorer
     public class CASCFile : ICASCEntry
     {
         private ulong hash;
+        private string fullname;
 
-        public CASCFile(ulong hash)
+        public CASCFile(ulong hash, string fullname)
         {
             this.hash = hash;
+            this.fullname = fullname;
         }
 
-        public string Name => Path.GetFileName(FullName);
+        public string Name => Path.GetFileName(fullname);
 
         public string FullName
         {
-            get => FileNames[hash];
-            set => FileNames[hash] = value;
+            get => fullname;
+            set => fullname = value;
         }
 
         public ulong Hash => hash;
@@ -150,6 +152,6 @@ namespace CASCExplorer
             return result;
         }
 
-        public static readonly Dictionary<ulong, string> FileNames = new Dictionary<ulong, string>();
+        public static readonly Dictionary<ulong, CASCFile> Files = new Dictionary<ulong, CASCFile>();
     }
 }

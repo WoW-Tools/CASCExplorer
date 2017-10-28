@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Threading;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     //[DefaultEvent("DoWork"), HostProtection(SecurityAction.LinkDemand, SharedState = true)]
     //public class BackgroundWorkerEx : Component

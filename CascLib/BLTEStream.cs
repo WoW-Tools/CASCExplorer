@@ -4,17 +4,21 @@ using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     [Serializable]
     class BLTEDecoderException : Exception
     {
-        public BLTEDecoderException(string message) : base(message)
+        public int ErrorCode { get; }
+
+        public BLTEDecoderException(int error, string message) : base(message)
         {
+            ErrorCode = error;
         }
 
-        public BLTEDecoderException(string fmt, params object[] args) : base(string.Format(fmt, args))
+        public BLTEDecoderException(int error, string fmt, params object[] args) : base(string.Format(fmt, args))
         {
+            ErrorCode = error;
         }
     }
 
@@ -74,12 +78,12 @@ namespace CASCExplorer
             int size = (int)_reader.BaseStream.Length;
 
             if (size < 8)
-                throw new BLTEDecoderException("not enough data: {0}", 8);
+                throw new BLTEDecoderException(0, "not enough data: {0}", 8);
 
             int magic = _reader.ReadInt32();
 
             if (magic != BLTE_MAGIC)
-                throw new BLTEDecoderException("frame header mismatch (bad BLTE file)");
+                throw new BLTEDecoderException(0, "frame header mismatch (bad BLTE file)");
 
             int headerSize = _reader.ReadInt32BE();
 
@@ -92,7 +96,7 @@ namespace CASCExplorer
                 byte[] newHash = _md5.ComputeHash(_reader.ReadBytes(headerSize > 0 ? headerSize : size));
 
                 if (!md5.EqualsTo(newHash))
-                    throw new BLTEDecoderException("data corrupted");
+                    throw new BLTEDecoderException(0, "data corrupted");
 
                 _reader.BaseStream.Position = oldPos;
             }
@@ -102,22 +106,22 @@ namespace CASCExplorer
             if (headerSize > 0)
             {
                 if (size < 12)
-                    throw new BLTEDecoderException("not enough data: {0}", 12);
+                    throw new BLTEDecoderException(0, "not enough data: {0}", 12);
 
                 byte[] fcbytes = _reader.ReadBytes(4);
 
                 numBlocks = fcbytes[1] << 16 | fcbytes[2] << 8 | fcbytes[3] << 0;
 
                 if (fcbytes[0] != 0x0F || numBlocks == 0)
-                    throw new BLTEDecoderException("bad table format 0x{0:x2}, numBlocks {1}", fcbytes[0], numBlocks);
+                    throw new BLTEDecoderException(0, "bad table format 0x{0:x2}, numBlocks {1}", fcbytes[0], numBlocks);
 
                 int frameHeaderSize = 24 * numBlocks + 12;
 
                 if (headerSize != frameHeaderSize)
-                    throw new BLTEDecoderException("header size mismatch");
+                    throw new BLTEDecoderException(0, "header size mismatch");
 
                 if (size < frameHeaderSize)
-                    throw new BLTEDecoderException("not enough data: {0}", frameHeaderSize);
+                    throw new BLTEDecoderException(0, "not enough data: {0}", frameHeaderSize);
             }
 
             _dataBlocks = new DataBlock[numBlocks];
@@ -163,7 +167,7 @@ namespace CASCExplorer
                     HandleDataBlock(decrypted, index);
                     break;
                 case 0x46: // F (frame, recursive)
-                    throw new BLTEDecoderException("DecoderFrame not implemented");
+                    throw new BLTEDecoderException(1, "DecoderFrame not implemented");
                 case 0x4E: // N (not compressed)
                     _memStream.Write(data, 1, data.Length - 1);
                     break;
@@ -171,7 +175,7 @@ namespace CASCExplorer
                     Decompress(data, _memStream);
                     break;
                 default:
-                    throw new BLTEDecoderException("unknown BLTE block type {0} (0x{1:X2})!", (char)data[0], data[0]);
+                    throw new BLTEDecoderException(1, "unknown BLTE block type {0} (0x{1:X2})!", (char)data[0], data[0]);
             }
         }
 
@@ -180,7 +184,7 @@ namespace CASCExplorer
             byte keyNameSize = data[1];
 
             if (keyNameSize == 0 || keyNameSize != 8)
-                throw new BLTEDecoderException("keyNameSize == 0 || keyNameSize != 8");
+                throw new BLTEDecoderException(2, "keyNameSize == 0 || keyNameSize != 8");
 
             byte[] keyNameBytes = new byte[keyNameSize];
             Array.Copy(data, 2, keyNameBytes, 0, keyNameSize);
@@ -190,20 +194,20 @@ namespace CASCExplorer
             byte IVSize = data[keyNameSize + 2];
 
             if (IVSize != 4 || IVSize > 0x10)
-                throw new BLTEDecoderException("IVSize != 4 || IVSize > 0x10");
+                throw new BLTEDecoderException(2, "IVSize != 4 || IVSize > 0x10");
 
             byte[] IVpart = new byte[IVSize];
             Array.Copy(data, keyNameSize + 3, IVpart, 0, IVSize);
 
             if (data.Length < IVSize + keyNameSize + 4)
-                throw new BLTEDecoderException("data.Length < IVSize + keyNameSize + 4");
+                throw new BLTEDecoderException(2, "data.Length < IVSize + keyNameSize + 4");
 
             int dataOffset = keyNameSize + IVSize + 3;
 
             byte encType = data[dataOffset];
 
             if (encType != ENCRYPTION_SALSA20 && encType != ENCRYPTION_ARC4) // 'S' or 'A'
-                throw new BLTEDecoderException("encType != ENCRYPTION_SALSA20 && encType != ENCRYPTION_ARC4");
+                throw new BLTEDecoderException(2, "encType != ENCRYPTION_SALSA20 && encType != ENCRYPTION_ARC4");
 
             dataOffset++;
 
@@ -220,7 +224,7 @@ namespace CASCExplorer
             byte[] key = KeyService.GetKey(keyName);
 
             if (key == null)
-                throw new BLTEDecoderException("unknown keyname {0:X16}", keyName);
+                throw new BLTEDecoderException(2, "unknown keyname {0:X16}", keyName);
 
             if (encType == ENCRYPTION_SALSA20)
             {
@@ -231,7 +235,7 @@ namespace CASCExplorer
             else
             {
                 // ARC4 ?
-                throw new BLTEDecoderException("encType ENCRYPTION_ARC4 not implemented");
+                throw new BLTEDecoderException(2, "encType ENCRYPTION_ARC4 not implemented");
             }
         }
 
@@ -282,7 +286,7 @@ namespace CASCExplorer
                 byte[] blockHash = _md5.ComputeHash(block.Data);
 
                 if (!block.Hash.EqualsTo(blockHash))
-                    throw new BLTEDecoderException("MD5 mismatch");
+                    throw new BLTEDecoderException(0, "MD5 mismatch");
             }
 
             HandleDataBlock(block.Data, _blocksIndex);

@@ -1,5 +1,5 @@
 ﻿using CASCConsole.Properties;
-using CASCExplorer;
+using CASCLib;
 using System;
 using System.ComponentModel;
 using System.IO;

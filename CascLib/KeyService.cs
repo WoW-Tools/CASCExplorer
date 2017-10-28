@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     class KeyService
     {
@@ -80,9 +80,11 @@ namespace CASCExplorer
             [0x3DB25CB86A40335E] = "02990B12260C1E9FDD73FE47CBAB7024".ToByteArray(), // TactKeyId 93
             [0x0DCD81945F4B4686] = "1B789B87FB3C9238D528997BFAB44186".ToByteArray(), // TactKeyId 94
             [0x486A2A3A2803BE89] = "32679EA7B0F99EBF4FA170E847EA439A".ToByteArray(), // TactKeyId 95
-            //[0x71F69446AD848E06] = "????????????????????????????????".ToByteArray(), // TactKeyId 97
-            //[0x211FCD1265A928E9] = "????????????????????????????????".ToByteArray(), // TactKeyId 98
+            [0x71F69446AD848E06] = "E79AEB88B1509F628F38208201741C30".ToByteArray(), // TactKeyId 97
+            [0x211FCD1265A928E9] = "A736FBF58D587B3972CE154A86AE4540".ToByteArray(), // TactKeyId 98
             [0x0ADC9E327E42E98C] = "017B3472C1DEE304FA0B2FF8E53FF7D6".ToByteArray(), // TactKeyId 99
+            [0xBAE9F621B60174F1] = "38C3FB39B4971760B4B982FE9F095014".ToByteArray(), // TactKeyId 100
+            [0x34DE1EEADC97115E] = "2E3A53D59A491E5CD173F337F7CD8C61".ToByteArray(), // TactKeyId 101
             // BNA 1.5.0 Alpha
             [0x2C547F26A2613E01] = "37C50C102D4C9E3A5AC069F072B1417D".ToByteArray(),
         };

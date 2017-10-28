@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     public sealed class CASCHandler : CASCHandlerBase
     {
@@ -63,10 +63,12 @@ namespace CASCExplorer
                         RootHandler = new HSRootHandler(fs, worker);
                     else if (config.GameType == CASCGameType.Overwatch)
                         RootHandler = new OwRootHandler(fs, worker, this);
+                    else if (config.GameType == CASCGameType.Destiny2)
+                        RootHandler = new Destiny2RootHandler(fs, worker);
                     else
                     {
-                        //using (var ufs = new FileStream("unk_root", FileMode.Create))
-                        //    fs.BaseStream.CopyTo(ufs);
+                        using (var ufs = new FileStream("unk_root", FileMode.Create))
+                            fs.BaseStream.CopyTo(ufs);
                         throw new Exception("Unsupported game " + config.BuildUID);
                     }
                 }
