@@ -85,6 +85,10 @@ namespace CASCLib
             [0x0ADC9E327E42E98C] = "017B3472C1DEE304FA0B2FF8E53FF7D6".ToByteArray(), // TactKeyId 99
             [0xBAE9F621B60174F1] = "38C3FB39B4971760B4B982FE9F095014".ToByteArray(), // TactKeyId 100
             [0x34DE1EEADC97115E] = "2E3A53D59A491E5CD173F337F7CD8C61".ToByteArray(), // TactKeyId 101
+            //[0xE07E107F1390A3DF] = "????????????????????????????????".ToByteArray(), // TactKeyId 102
+            [0x32690BF74DE12530] = "A2556210AE5422E6D61EDAAF122CB637".ToByteArray(), // TactKeyId 103
+            [0xBF3734B1DCB04696] = "48946123050B00A7EFB1C029EE6CC438".ToByteArray(), // TactKeyId 104
+            [0x74F4F78002A5A1BE] = "C14EEC8D5AEEF93FA811D450B4E46E91".ToByteArray(), // TactKeyId 105
             // BNA 1.5.0 Alpha
             [0x2C547F26A2613E01] = "37C50C102D4C9E3A5AC069F072B1417D".ToByteArray(),
         };
