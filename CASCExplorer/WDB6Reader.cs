@@ -5,16 +5,20 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace CASCExplorer
+namespace CASCLib
 {
-    public class DB5Row
+    public class DB6Row
     {
         private byte[] m_data;
-        private DB5Reader m_reader;
+        private DB6Reader m_reader;
 
-        public byte[] Data => m_data;
+        public byte[] Data
+        {
+            get => m_data;
+            set => m_data = value;
+        }
 
-        public DB5Row(DB5Reader reader, byte[] data)
+        public DB6Row(DB6Reader reader, byte[] data)
         {
             m_reader = reader;
             m_data = data;
@@ -98,16 +102,10 @@ namespace CASCExplorer
         }
     }
 
-    public class DB2Meta
+    public class DB6Reader : IEnumerable<KeyValuePair<int, DB6Row>>
     {
-        public short Bits { get; set; }
-        public short Offset { get; set; }
-    }
-
-    public class DB5Reader : IEnumerable<KeyValuePair<int, DB5Row>>
-    {
-        private const int HeaderSize = 48;
-        private const uint DB5FmtSig = 0x35424457;          // WDB5
+        private const int HeaderSize = 56;
+        private const uint DB6FmtSig = 0x36424457;          // WDB6
 
         public int RecordsCount { get; private set; }
         public int FieldsCount { get; private set; }
@@ -122,24 +120,24 @@ namespace CASCExplorer
         public byte[] StringTable => m_stringTable;
         public DB2Meta[] Meta => m_meta;
 
-        private Dictionary<int, DB5Row> m_index = new Dictionary<int, DB5Row>();
+        private Dictionary<int, DB6Row> m_index = new Dictionary<int, DB6Row>();
 
-        public DB5Reader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
+        public DB6Reader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
 
-        public DB5Reader(Stream stream)
+        public DB6Reader(Stream stream)
         {
             using (var reader = new BinaryReader(stream, Encoding.UTF8))
             {
                 if (reader.BaseStream.Length < HeaderSize)
                 {
-                    throw new InvalidDataException(String.Format("DB5 file is corrupted!"));
+                    throw new InvalidDataException(String.Format("DB6 file is corrupted!"));
                 }
 
                 uint magic = reader.ReadUInt32();
 
-                if (magic != DB5FmtSig)
+                if (magic != DB6FmtSig)
                 {
-                    throw new InvalidDataException(String.Format("DB5 file is corrupted!"));
+                    throw new InvalidDataException(String.Format("DB6 file is corrupted!"));
                 }
 
                 RecordsCount = reader.ReadInt32();
@@ -156,6 +154,9 @@ namespace CASCExplorer
                 int flags = reader.ReadUInt16();
                 int idIndex = reader.ReadUInt16();
 
+                int totalFieldsCount = reader.ReadInt32();
+                int commonDataSize = reader.ReadInt32();
+
                 bool isSparse = (flags & 0x1) != 0;
                 bool hasIndex = (flags & 0x4) != 0;
 
@@ -170,11 +171,11 @@ namespace CASCExplorer
                     };
                 }
 
-                DB5Row[] m_rows = new DB5Row[RecordsCount];
+                DB6Row[] m_rows = new DB6Row[RecordsCount];
 
                 for (int i = 0; i < RecordsCount; i++)
                 {
-                    m_rows[i] = new DB5Row(this, reader.ReadBytes(RecordSize));
+                    m_rows[i] = new DB6Row(this, reader.ReadBytes(RecordSize));
                 }
 
                 m_stringTable = reader.ReadBytes(StringTableSize);
@@ -214,6 +215,84 @@ namespace CASCExplorer
                         m_index[newId] = m_index[oldId];
                     }
                 }
+
+                if (commonDataSize > 0)
+                {
+                    Array.Resize(ref m_meta, totalFieldsCount);
+
+                    Dictionary<byte, short> typeToBits = new Dictionary<byte, short>()
+                    {
+                        [1] = 16,
+                        [2] = 24,
+                        [3] = 0,
+                        [4] = 0,
+                    };
+
+                    int fieldsCount = reader.ReadInt32();
+                    Dictionary<int, byte[]>[] fieldData = new Dictionary<int, byte[]>[fieldsCount];
+
+                    for (int i = 0; i < fieldsCount; i++)
+                    {
+                        int count = reader.ReadInt32();
+                        byte type = reader.ReadByte();
+
+                        if (i >= FieldsCount)
+                            m_meta[i] = new DB2Meta() { Bits = typeToBits[type], Offset = (short)(m_meta[i - 1].Offset + ((32 - m_meta[i - 1].Bits) >> 3)) };
+
+                        fieldData[i] = new Dictionary<int, byte[]>();
+
+                        for (int j = 0; j < count; j++)
+                        {
+                            int id = reader.ReadInt32();
+
+                            byte[] data;
+
+                            switch (type)
+                            {
+                                case 1: // 2 bytes
+                                    data = reader.ReadBytes(2);
+                                    reader.Skip(2); // 7.3 fix
+                                    break;
+                                case 2: // 1 bytes
+                                    data = reader.ReadBytes(1);
+                                    reader.Skip(3); // 7.3 fix
+                                    break;
+                                case 3: // 4 bytes
+                                case 4:
+                                    data = reader.ReadBytes(4);
+                                    break;
+                                default:
+                                    throw new Exception("Invalid data type " + type);
+                            }
+
+                            fieldData[i].Add(id, data);
+                        }
+                    }
+
+                    var keys = m_index.Keys.ToArray();
+                    foreach (var row in keys)
+                    {
+                        for (int i = 0; i < fieldData.Length; i++)
+                        {
+                            var col = fieldData[i];
+
+                            if (col.Count == 0)
+                                continue;
+
+                            var rowRef = m_index[row];
+                            byte[] rowData = m_index[row].Data;
+
+                            byte[] data = col.ContainsKey(row) ? col[row] : new byte[col.First().Value.Length];
+
+                            Array.Resize(ref rowData, rowData.Length + data.Length);
+                            Array.Copy(data, 0, rowData, m_meta[i].Offset, data.Length);
+
+                            rowRef.Data = rowData;
+                        }
+                    }
+
+                    FieldsCount = totalFieldsCount;
+                }
             }
         }
 
@@ -222,7 +301,7 @@ namespace CASCExplorer
             return m_index.ContainsKey(id);
         }
 
-        public DB5Row GetRow(int id)
+        public DB6Row GetRow(int id)
         {
             if (!m_index.ContainsKey(id))
                 return null;
@@ -230,7 +309,7 @@ namespace CASCExplorer
             return m_index[id];
         }
 
-        public IEnumerator<KeyValuePair<int, DB5Row>> GetEnumerator()
+        public IEnumerator<KeyValuePair<int, DB6Row>> GetEnumerator()
         {
             return m_index.GetEnumerator();
         }

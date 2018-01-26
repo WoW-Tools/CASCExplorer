@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     public class MultiDictionary<K, V> : Dictionary<K, List<V>>
     {

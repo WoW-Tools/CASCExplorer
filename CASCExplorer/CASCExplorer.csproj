@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CASCExplorer</RootNamespace>
     <AssemblyName>CASCExplorer</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -115,6 +115,12 @@
     <Compile Include="SelectBuildForm.Designer.cs">
       <DependentUpon>SelectBuildForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="WDB2Reader.cs" />
+    <Compile Include="WDB3Reader.cs" />
+    <Compile Include="WDB5Reader.cs" />
+    <Compile Include="WDB6Reader.cs" />
+    <Compile Include="WDBCReader.cs" />
+    <Compile Include="WDC1Reader.cs" />
     <EmbeddedResource Include="AboutBox.resx">
       <DependentUpon>AboutBox.cs</DependentUpon>
     </EmbeddedResource>

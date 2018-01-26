@@ -1,16 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
-namespace CASCExplorer
+namespace CASCLib
 {
-    public class AgentRootHandler : RootHandlerBase
+    public class Destiny2RootHandler : RootHandlerBase
     {
-        public AgentRootHandler(BinaryReader stream, BackgroundWorkerEx worker)
+        public Destiny2RootHandler(BinaryReader stream, BackgroundWorkerEx worker)
         {
             worker?.ReportProgress(0, "Loading \"root\"...");
 
-            string hash = Encoding.ASCII.GetString(stream.ReadBytes((int)stream.BaseStream.Length)); // what is this for?
+            // root file for Destiny 2 is game executable...
 
             worker?.ReportProgress(100);
         }
@@ -53,7 +52,7 @@ namespace CASCExplorer
         public override void Clear()
         {
             Root.Entries.Clear();
-            CASCFile.FileNames.Clear();
+            CASCFile.Files.Clear();
         }
 
         public override void Dump()

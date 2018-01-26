@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using CASCLib;
+using System.Windows.Forms;
 
 namespace CASCExplorer
 {

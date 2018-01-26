@@ -2,9 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     public static class Extensions
     {
@@ -25,26 +26,30 @@ namespace CASCExplorer
             return (uint)(val[3] | val[2] << 8 | val[1] << 16 | val[0] << 24);
         }
 
-        public unsafe static T Read<T>(this BinaryReader reader) where T : struct
+        public static T Read<T>(this BinaryReader reader) where T : struct
         {
             byte[] result = reader.ReadBytes(FastStruct<T>.Size);
 
-            fixed (byte* ptr = result)
-                return FastStruct<T>.PtrToStructure(ptr);
+            return FastStruct<T>.ArrayToStructure(result);
         }
 
-        public unsafe static T[] ReadArray<T>(this BinaryReader reader) where T : struct
+        public static T[] ReadArray<T>(this BinaryReader reader) where T : struct
         {
             int numBytes = (int)reader.ReadInt64();
 
             byte[] result = reader.ReadBytes(numBytes);
 
-            fixed (byte* ptr = result)
-            {
-                T[] data = FastStruct<T>.ReadArray((IntPtr)ptr, numBytes);
-                reader.BaseStream.Position += (0 - numBytes) & 0x07;
-                return data;
-            }
+            reader.BaseStream.Position += (0 - numBytes) & 0x07;
+            return FastStruct<T>.ReadArray(result);
+        }
+
+        public static T[] ReadArray<T>(this BinaryReader reader, int size) where T : struct
+        {
+            int numBytes = FastStruct<T>.Size * size;
+
+            byte[] result = reader.ReadBytes(numBytes);
+
+            return FastStruct<T>.ReadArray(result);
         }
 
         public static short ReadInt16BE(this BinaryReader reader)

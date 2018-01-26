@@ -1,4 +1,5 @@
 ﻿using CASCExplorer.Properties;
+using CASCLib;
 using System;
 using System.Collections.Specialized;
 using System.ComponentModel;

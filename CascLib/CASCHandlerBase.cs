@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     public abstract class CASCHandlerBase
     {
@@ -64,7 +64,13 @@ namespace CASCExplorer
                 else
                     return OpenFileLocal(key);
             }
-            catch (Exception exc) when (!(exc is BLTEDecoderException))
+            catch (BLTEDecoderException exc) when (exc.ErrorCode == 2)
+            {
+                if (CASCConfig.ThrowOnMissingDecryptionKey)
+                    throw exc;
+                return null;
+            }
+            catch// (Exception exc) when (!(exc is BLTEDecoderException))
             {
                 return OpenFileOnline(key);
             }

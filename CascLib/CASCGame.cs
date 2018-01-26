@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     public enum CASCGameType
     {
@@ -15,7 +15,8 @@ namespace CASCExplorer
         Bna,
         Client,
         S1,
-        WC3
+        WC3,
+        Destiny2
     }
 
     public class CASCGame
@@ -98,6 +99,9 @@ namespace CASCExplorer
 
             if (uid.StartsWith("clnt"))
                 return CASCGameType.Client;
+
+            if (uid.StartsWith("dst2"))
+                return CASCGameType.Destiny2;
 
             return CASCGameType.Unknown;
         }
