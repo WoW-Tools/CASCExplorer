@@ -253,38 +253,6 @@ namespace CASCLib
             return true;
         }
 
-        public void LoadFileDataComplete(CASCHandler casc)
-        {
-            if (!casc.FileExists("DBFilesClient\\FileDataComplete.db2"))
-                return;
-
-            Logger.WriteLine("WowRootHandler: loading file names from FileDataComplete.db2...");
-
-            using (var s = casc.OpenFile("DBFilesClient\\FileDataComplete.db2"))
-            {
-                DB5Reader fd = new DB5Reader(s);
-
-                foreach (var row in fd)
-                {
-                    string path = row.Value.GetField<string>(0);
-                    string name = row.Value.GetField<string>(1);
-
-                    string fullname = path + name;
-
-                    ulong fileHash = Hasher.ComputeHash(fullname);
-
-                    // skip invalid names
-                    if (!RootData.ContainsKey(fileHash))
-                    {
-                        //Logger.WriteLine("Invalid file name: {0}", fullname);
-                        continue;
-                    }
-
-                    CASCFile.Files[fileHash] = new CASCFile(fileHash, fullname);
-                }
-            }
-        }
-
         public override void LoadListFile(string path, BackgroundWorkerEx worker = null)
         {
             if (LoadPreHashedListFile("listfile.bin", path, worker))

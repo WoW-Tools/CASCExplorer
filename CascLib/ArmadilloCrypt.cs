@@ -1,11 +1,10 @@
-﻿using CASCLib;
-using System;
+﻿using System;
 using System.IO;
 using System.Security.Cryptography;
 
-namespace CascLib
+namespace CASCLib
 {
-    class ArmadilloCrypt
+    public class ArmadilloCrypt
     {
         private byte[] _key;
 
@@ -68,7 +67,7 @@ namespace CascLib
             return true;
         }
 
-        byte[] DecryptFile(string name, byte[] data)
+        public byte[] DecryptFile(string name, byte[] data)
         {
             string fileName = Path.GetFileNameWithoutExtension(name);
 
@@ -77,6 +76,13 @@ namespace CascLib
 
             byte[] IV = fileName.Substring(16).ToByteArray();
 
+            ICryptoTransform decryptor = KeyService.SalsaInstance.CreateDecryptor(_key, IV);
+
+            return decryptor.TransformFinalBlock(data, 0, data.Length);
+        }
+
+        public byte[] DecryptFile(byte[] IV, byte[] data)
+        {
             ICryptoTransform decryptor = KeyService.SalsaInstance.CreateDecryptor(_key, IV);
 
             return decryptor.TransformFinalBlock(data, 0, data.Length);

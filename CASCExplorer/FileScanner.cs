@@ -16,7 +16,18 @@ namespace CASCExplorer
         private static readonly List<string> extensions = new List<string>()
         {
             ".adt", ".anim", ".avi", ".blob", ".blp", ".bls", ".bone", ".db2", ".dbc", ".html", ".ini", ".lst", ".lua", ".m2", ".mp3", ".ogg",
-            ".phys", ".sbt", ".sig", ".skin", ".tex", ".toc", ".ttf", ".txt", ".wdl", ".wdt", ".wfx", ".wmo", ".wtf", ".xml", ".xsd", ".zmp"
+            ".phys", ".sbt", ".sig", ".skin", ".tex", ".toc", ".ttf", ".txt", ".wdl", ".wdt", ".wfx", ".wmo", ".wtf", ".xml", ".xsd", ".zmp",
+            "obj0.adt", "obj1.adt", "tex0.adt"
+        };
+
+        private static readonly Dictionary<byte[], string> LargeMagicNumbers = new Dictionary<byte[], string>()
+        {
+            { new byte[] { 0x52, 0x45, 0x56, 0x4D, 0x04, 0x00, 0x00, 0x00, 0x12, 0x00, 0x00, 0x00, 0x44, 0x48, 0x50 }, ".wdt" },
+            { new byte[] { 0x52, 0x45, 0x56, 0x4D, 0x04, 0x00, 0x00, 0x00, 0x12, 0x00, 0x00, 0x00, 0x52, 0x44, 0x48 }, ".adt" },
+            { new byte[] { 0x52, 0x45, 0x56, 0x4D, 0x04, 0x00, 0x00, 0x00, 0x12, 0x00, 0x00, 0x00, 0x58, 0x44, 0x4D }, "obj0.adt" },
+            { new byte[] { 0x52, 0x45, 0x56, 0x4D, 0x04, 0x00, 0x00, 0x00, 0x12, 0x00, 0x00, 0x00, 0x44, 0x46, 0x4C }, "obj1.adt" },
+            { new byte[] { 0x52, 0x45, 0x56, 0x4D, 0x04, 0x00, 0x00, 0x00, 0x12, 0x00, 0x00, 0x00, 0x50, 0x4D, 0x41 }, "tex0.adt" }
+
         };
 
         private static readonly Dictionary<byte[], string> MagicNumbers = new Dictionary<byte[], string>()
@@ -26,23 +37,24 @@ namespace CASCExplorer
             { new byte[] { 0x4d, 0x44, 0x32, 0x31 }, ".m2"   },
             { new byte[] { 0x53, 0x59, 0x48, 0x50 }, ".phys" },
             { new byte[] { 0x53, 0x4b, 0x49, 0x4e }, ".skin" },
-            { new byte[] { 0x57, 0x44, 0x42, 0x43 }, ".dbc"  },
-            { new byte[] { 0x57, 0x44, 0x42, 0x35 }, ".db2"  },
-            { new byte[] { 0x57, 0x44, 0x42, 0x36 }, ".db2"  },
-            { new byte[] { 0x52, 0x56, 0x58, 0x54 }, ".tex"  },
-            { new byte[] { 0x4f, 0x67, 0x67, 0x53 }, ".ogg"  },
-            { new byte[] { 0x48, 0x53, 0x58, 0x47 }, ".bls"  },
-            { new byte[] { 0x52, 0x49, 0x46, 0x46 }, ".wav"  },
-            { new byte[] { 0x44, 0x55, 0x54, 0x53 }, ".duts" },
-            { new byte[] { 0x42, 0x4B, 0x48, 0x44 }, ".bkhd" },
-            { new byte[] { 0x45, 0x45, 0x44, 0x43 }, ".eedc" },
-            { new byte[] { 0x49, 0x44, 0x33       }, ".mp3"  },
-            { new byte[] { 0xff, 0xfb             }, ".mp3"  },
             { new byte[] { 0x52, 0x45, 0x56, 0x4D }, ".wmo"  },
             { new byte[] { 0x00, 0x00, 0x00, 0x01 }, ".anim" },
             { new byte[] { 0x00, 0x00, 0x00, 0x00 }, ".anim" },
             { new byte[] { 0x3C, 0x68, 0x74, 0x6D }, ".html" },
             { new byte[] { 0xEF, 0xBB, 0xBF, 0x3C, 0x68, 0x74, 0x6D }, ".html" },
+            { new byte[] { 0x57, 0x44, 0x42, 0x43 }, ".dbc" },
+            { new byte[] { 0x57, 0x44, 0x42, 0x35 }, ".db2" }, // WDB5
+            { new byte[] { 0x57, 0x44, 0x42, 0x36 }, ".db2" }, // WDB6
+            { new byte[] { 0x57, 0x44, 0x43, 0x31 }, ".db2" }, // WDC1
+            { new byte[] { 0x52, 0x56, 0x58, 0x54 }, ".tex" },
+            { new byte[] { 0x4f, 0x67, 0x67, 0x53 }, ".ogg" },
+            { new byte[] { 0x48, 0x53, 0x58, 0x47 }, ".bls" },
+            { new byte[] { 0x52, 0x49, 0x46, 0x46 }, ".wav" },
+            { new byte[] { 0x44, 0x55, 0x54, 0x53 }, ".duts" },
+            { new byte[] { 0x42, 0x4B, 0x48, 0x44 }, ".bkhd" },
+            { new byte[] { 0x45, 0x45, 0x44, 0x43 }, ".eedc" },
+            { new byte[] { 0x49, 0x44, 0x33 }, ".mp3" },
+            { new byte[] { 0xff, 0xfb }, ".mp3" }
         };
 
         private CASCHandler CASC;
@@ -161,11 +173,18 @@ namespace CASCExplorer
             {
                 using (Stream stream = CASC.OpenFile(file.Hash))
                 {
-                    byte[] magic = new byte[8];
-
-                    stream.Read(magic, 0, 8);
+                    byte[] magic = new byte[15];
+                    stream.Read(magic, 0, magic.Length);
 
                     foreach (var number in MagicNumbers)
+                    {
+                        if (number.Key.EqualsToIgnoreLength(magic))
+                        {
+                            return number.Value;
+                        }
+                    }
+
+                    foreach (var number in LargeMagicNumbers)
                     {
                         if (number.Key.EqualsToIgnoreLength(magic))
                         {

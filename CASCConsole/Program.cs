@@ -14,6 +14,42 @@ namespace CASCConsole
 
         static void Main(string[] args)
         {
+            //byte[] keyBytes = new byte[16];
+
+            //ArmadilloCrypt crypt = new ArmadilloCrypt(keyBytes);
+
+            //string buildconfigfile = "9f6048f8bd01f38ec0be83f4a9fe5a10";
+
+            //byte[] data = File.ReadAllBytes(buildconfigfile);
+
+            //byte[] IV = buildconfigfile.Substring(16).ToByteArray();
+
+            //unsafe
+            //{
+            //    fixed (byte* ptr = keyBytes)
+            //    {
+            //        for (ulong i = 0; i < ulong.MaxValue; i++)
+            //        {
+            //            for (ulong j = 0; j < ulong.MaxValue; j++)
+            //            {
+            //                byte[] decrypted = crypt.DecryptFile(IV, data);
+
+            //                if (decrypted[0] == 0x23 && decrypted[1] == 0x20 && decrypted[2] == 0x42 && decrypted[3] == 0x75)
+            //                {
+            //                    Console.WriteLine("key found: {0} {1} ?", i, j);
+            //                }
+
+            //                *(ulong*)ptr = j;
+
+            //                if (j % 1000000 == 0)
+            //                    Console.WriteLine("{0}/{1}", j, ulong.MaxValue);
+            //            }
+
+            //            *(ulong*)(ptr + 8) = i;
+            //        }
+            //    }
+            //}
+
             if (args.Length != 4)
             {
                 Console.WriteLine("Invalid arguments count!");

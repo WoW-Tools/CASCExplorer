@@ -1,4 +1,5 @@
 ﻿using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace CASCLib
@@ -41,11 +42,25 @@ namespace CASCLib
             return (CopyMemoryDelegate)methodCopyMemory.CreateDelegate(typeof(CopyMemoryDelegate));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T ArrayToStructure(byte[] src)
         {
             return LoadFromByteRef(ref src[0]);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T ArrayToStructure(byte[] src, int offset)
+        {
+            return LoadFromByteRef(ref src[offset]);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T ArrayToStructure(ref byte src)
+        {
+            return LoadFromByteRef(ref src);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T[] ReadArray(byte[] source)
         {
             T[] buffer = new T[source.Length / Size];

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace CASCLib
@@ -39,6 +40,15 @@ namespace CASCLib
             byte[] result = reader.ReadBytes(numBytes);
 
             reader.BaseStream.Position += (0 - numBytes) & 0x07;
+            return FastStruct<T>.ReadArray(result);
+        }
+
+        public static T[] ReadArray<T>(this BinaryReader reader, int size) where T : struct
+        {
+            int numBytes = FastStruct<T>.Size * size;
+
+            byte[] result = reader.ReadBytes(numBytes);
+
             return FastStruct<T>.ReadArray(result);
         }
 

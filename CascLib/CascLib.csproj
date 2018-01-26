@@ -43,26 +43,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Destiny2RootHandler.cs" />
+    <Compile Include="RootHandlers\Destiny2RootHandler.cs" />
     <Compile Include="ArmadilloCrypt.cs" />
-    <Compile Include="WC3RootHandler.cs" />
-    <Compile Include="S1RootHandler.cs" />
+    <Compile Include="RootHandlers\WC3RootHandler.cs" />
+    <Compile Include="RootHandlers\S1RootHandler.cs" />
     <Compile Include="BackgroundWorkerEx.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="BLTEStream.cs" />
     <Compile Include="CASCHandlerBase.cs" />
     <Compile Include="CASCHandlerLite.cs" />
-    <Compile Include="DB2Reader.cs" />
-    <Compile Include="DB3Reader.cs" />
-    <Compile Include="DB6Reader.cs" />
-    <Compile Include="DB5Reader.cs" />
-    <Compile Include="DBCReader.cs" />
     <Compile Include="DownloadHandler.cs" />
     <Compile Include="FastStruct.cs" />
     <Compile Include="KeyService.cs" />
-    <Compile Include="OWRootHandler.cs" />
-    <Compile Include="HSRootHandler.cs" />
+    <Compile Include="RootHandlers\OWRootHandler.cs" />
+    <Compile Include="RootHandlers\HSRootHandler.cs" />
     <Compile Include="MD5HashComparer.cs" />
     <Compile Include="CASCConfig.cs" />
     <Compile Include="CASCEntry.cs" />
@@ -70,7 +65,7 @@
     <Compile Include="CASCHandler.cs" />
     <Compile Include="CDNCache.cs" />
     <Compile Include="CDNIndexHandler.cs" />
-    <Compile Include="D3RootHandler.cs" />
+    <Compile Include="RootHandlers\D3RootHandler.cs" />
     <Compile Include="EncodingHandler.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="InstallHandler.cs" />
@@ -79,15 +74,15 @@
     <Compile Include="Jenkins96Old.cs" />
     <Compile Include="LocalIndexHandler.cs" />
     <Compile Include="Logger.cs" />
-    <Compile Include="MNDXRootHandler.cs" />
+    <Compile Include="RootHandlers\MNDXRootHandler.cs" />
     <Compile Include="MultiDictionary.cs" />
     <Compile Include="PerfCounter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Salsa20.cs" />
     <Compile Include="SyncDownloader.cs" />
-    <Compile Include="AgentRootHandler.cs" />
+    <Compile Include="RootHandlers\AgentRootHandler.cs" />
     <Compile Include="Wildcard.cs" />
-    <Compile Include="WowRootHandler.cs" />
+    <Compile Include="RootHandlers\WowRootHandler.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
