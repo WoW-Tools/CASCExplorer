@@ -43,9 +43,9 @@ namespace CASCLib
 
     public class CDNCache
     {
-        public bool Enabled { get; set; } = true;
-        public bool CacheData { get; set; } = false;
-        public bool Validate { get; set; } = true;
+        public static bool Enabled { get; set; } = true;
+        public static bool CacheData { get; set; } = false;
+        public static bool Validate { get; set; } = true;
 
         private readonly string _cachePath;
         private readonly SyncDownloader _downloader = new SyncDownloader(null);
