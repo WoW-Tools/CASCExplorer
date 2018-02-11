@@ -43,11 +43,34 @@ namespace CASCLib
                 m_data.Position = columnMeta[idFieldIndex].RecordOffset;
                 m_data.Offset = Offset;
 
-                Id = GetFieldValue<uint>(m_data, fieldMeta[idFieldIndex], columnMeta[idFieldIndex], palletData[idFieldIndex], commonData[idFieldIndex]);
+                Id = GetFieldValue<uint>(0, m_data, fieldMeta[idFieldIndex], columnMeta[idFieldIndex], palletData[idFieldIndex], commonData[idFieldIndex]);
             }
         }
 
-        public T GetField<T>(int fieldIndex, int arrayIndex = 0)
+        private static Dictionary<Type, Func<uint, BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<uint, Value32>, Dictionary<int, string>, object>> simpleReaders = new Dictionary<Type, Func<uint, BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<uint, Value32>, Dictionary<int, string>, object>>
+        {
+            [typeof(float)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<float>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(int)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<int>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(uint)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<uint>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(short)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<short>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(ushort)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<ushort>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(sbyte)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<sbyte>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(byte)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<byte>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(string)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => { int strOfs = GetFieldValue<int>(id, data, fieldMeta, columnMeta, palletData, commonData); return stringTable[strOfs]; },
+        };
+
+        private static Dictionary<Type, Func<BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<uint, Value32>, Dictionary<int, string>, int, object>> arrayReaders = new Dictionary<Type, Func<BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<uint, Value32>, Dictionary<int, string>, int, object>>
+        {
+            [typeof(float)] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<float>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex + 1)[arrayIndex],
+            [typeof(int)] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<int>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex + 1)[arrayIndex],
+            [typeof(uint)] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<uint>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex + 1)[arrayIndex],
+            [typeof(ulong)] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<ulong>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex + 1)[arrayIndex],
+            [typeof(ushort)] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<ushort>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex + 1)[arrayIndex],
+            [typeof(byte)] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<byte>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex + 1)[arrayIndex],
+            [typeof(string)] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => { int strOfs = GetFieldValueArray<int>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex + 1)[arrayIndex]; return stringTable[strOfs]; },
+        };
+
+        public T GetField<T>(int fieldIndex, int arrayIndex = -1)
         {
             object value = null;
 
@@ -60,70 +83,25 @@ namespace CASCLib
             m_data.Position = columnMeta[fieldIndex].RecordOffset;
             m_data.Offset = Offset;
 
-            Type t = typeof(T);
-
-            if (t == typeof(float))
-                value = GetFieldValue<float>(m_data, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex]);
-            else if (t == typeof(int))
-                value = GetFieldValue<int>(m_data, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex]);
-            else if (t == typeof(uint))
-                value = GetFieldValue<uint>(m_data, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex]);
-            else if (t == typeof(short))
-                value = GetFieldValue<short>(m_data, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex]);
-            else if (t == typeof(ushort))
-                value = GetFieldValue<ushort>(m_data, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex]);
-            else if (t == typeof(byte))
-                value = GetFieldValue<byte>(m_data, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex]);
-            else if (t == typeof(sbyte))
-                value = GetFieldValue<sbyte>(m_data, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex]);
-            else if (t == typeof(string))
+            if (arrayIndex >= 0)
             {
-                int strOfs = GetFieldValue<int>(m_data, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex]);
-                value = m_reader.StringTable[strOfs];
-            }
-            else if (arrayIndex > 0)
-            {
-                Type arrayElementType = typeof(T);
-
-                if (arrayElementType == typeof(int))
-                {
-                    value = GetFieldValueArray<int>(m_data, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex], arrayIndex + 1)[arrayIndex];
-                }
-                else if (arrayElementType == typeof(uint))
-                {
-                    value = GetFieldValueArray<uint>(m_data, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex], arrayIndex + 1)[arrayIndex];
-                }
-                else if (arrayElementType == typeof(ulong))
-                {
-                    value = GetFieldValueArray<ulong>(m_data, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex], arrayIndex + 1)[arrayIndex];
-                }
-                else if (arrayElementType == typeof(float))
-                {
-                    value = GetFieldValueArray<float>(m_data, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex], arrayIndex + 1)[arrayIndex];
-                }
-                else if (arrayElementType == typeof(ushort))
-                {
-                    value = GetFieldValueArray<ushort>(m_data, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex], arrayIndex + 1)[arrayIndex];
-                }
-                else if (arrayElementType == typeof(byte))
-                {
-                    value = GetFieldValueArray<byte>(m_data, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex], arrayIndex + 1)[arrayIndex];
-                }
-                else if (arrayElementType == typeof(string))
-                {
-                    int strOfs = GetFieldValueArray<int>(m_data, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex], arrayIndex + 1)[arrayIndex];
-                    value = m_reader.StringTable[strOfs];
-                }
+                if (arrayReaders.TryGetValue(typeof(T), out var reader))
+                    value = reader(m_data, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex], m_reader.StringTable, arrayIndex);
                 else
-                    throw new Exception("Unhandled array type: " + arrayElementType.Name);
+                    throw new Exception("Unhandled array type: " + typeof(T).Name);
             }
             else
-                throw new Exception("Unhandled DbcTable type: " + t.Name);
+            {
+                if (simpleReaders.TryGetValue(typeof(T), out var reader))
+                    value = reader(Id, m_data, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex], m_reader.StringTable);
+                else
+                    throw new Exception("Unhandled field type: " + typeof(T).Name);
+            }
 
             return (T)value;
         }
 
-        private T GetFieldValue<T>(BitReader r, FieldMetaData fieldMeta, ColumnMetaData columnMeta, Value32[] palletData, Dictionary<uint, Value32> commonData) where T : struct
+        private static T GetFieldValue<T>(uint Id, BitReader r, FieldMetaData fieldMeta, ColumnMetaData columnMeta, Value32[] palletData, Dictionary<uint, Value32> commonData) where T : struct
         {
             switch (columnMeta.CompressionType)
             {
@@ -150,7 +128,7 @@ namespace CASCLib
             throw new Exception(string.Format("Unexpected compression type {0}", columnMeta.CompressionType));
         }
 
-        private T[] GetFieldValueArray<T>(BitReader r, FieldMetaData fieldMeta, ColumnMetaData columnMeta, Value32[] palletData, Dictionary<uint, Value32> commonData, int arraySize) where T : struct
+        private static T[] GetFieldValueArray<T>(BitReader r, FieldMetaData fieldMeta, ColumnMetaData columnMeta, Value32[] palletData, Dictionary<uint, Value32> commonData, int arraySize) where T : struct
         {
             switch (columnMeta.CompressionType)
             {

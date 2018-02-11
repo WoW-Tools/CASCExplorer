@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CASCExplorer</RootNamespace>
     <AssemblyName>CASCExplorer</AssemblyName>
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -172,9 +172,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CascLib\CascLib.csproj">
-      <Project>{E08E1E48-6585-4137-8405-661C62C10713}</Project>
-      <Name>CascLib</Name>
+    <ProjectReference Include="..\CascLibCore\CascLibCore.csproj">
+      <Project>{d6ee8d24-722f-488e-bd31-f01f765010b9}</Project>
+      <Name>CascLibCore</Name>
     </ProjectReference>
     <ProjectReference Include="..\CASCExplorer.ViewPlugin\CASCExplorer.ViewPlugin.csproj">
       <Project>{63C32AC8-2EE2-4DB7-99C5-84FD815AADC3}</Project>
