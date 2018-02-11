@@ -1,7 +1,6 @@
 ﻿using CASCExplorer.Properties;
 using CASCExplorer.ViewPlugin;
 using CASCLib;
-using SereniaBLPLib;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
@@ -166,9 +165,9 @@ namespace CASCExplorer
                         using (Stream skeStream = _casc.OpenFile("DBFilesClient\\SoundKitEntry.db2"))
                         using (Stream sknStream = _casc.OpenFile("DBFilesClient\\SoundKitName.db2"))
                         {
-                            DB6Reader sk = new DB6Reader(skStream);
-                            DB6Reader ske = new DB6Reader(skeStream);
-                            DB6Reader skn = new DB6Reader(sknStream);
+                            var sk  = new WDC1Reader(skStream);
+                            var ske = new WDC1Reader(skeStream);
+                            var skn = new WDC1Reader(sknStream);
 
                             Dictionary<int, List<int>> lookup = new Dictionary<int, List<int>>();
 
@@ -189,7 +188,7 @@ namespace CASCExplorer
 
                                 int type = row.Value.GetField<byte>(6);
 
-                                if (!lookup.TryGetValue(row.Key, out List<int> ske_entries))
+                                if (!lookup.TryGetValue((int)row.Key, out List<int> ske_entries))
                                     continue;
 
                                 bool many = ske_entries.Count > 1;

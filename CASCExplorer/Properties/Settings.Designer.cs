@@ -59,5 +59,16 @@ namespace CASCExplorer.Properties {
                 this["RecentStorages"] = value;
             }
         }
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool PreviewVisible {
+            get {
+                return ((bool)(this["PreviewVisible"]));
+            }
+            set {
+                this["PreviewVisible"] = value;
+            }
+        }
     }
 }

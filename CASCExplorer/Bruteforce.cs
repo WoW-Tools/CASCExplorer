@@ -65,7 +65,7 @@ namespace CASCExplorer
     public class Bruteforce : IEnumerable<string>
     {
         private StringBuilder sb = new StringBuilder();
-        public string charset = "abcdefghijklmnopqrstuvwxyz";
+        public string charset = "abcdefghijklmnopqrstuvwxyz-_ ";
         private uint len;
         private Stopwatch sw = new Stopwatch();
         public int max { get; set; }
