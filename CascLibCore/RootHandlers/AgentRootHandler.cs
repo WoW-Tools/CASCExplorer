@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     public class AgentRootHandler : RootHandlerBase
     {
@@ -53,7 +53,7 @@ namespace CASCExplorer
         public override void Clear()
         {
             Root.Entries.Clear();
-            CASCFile.FileNames.Clear();
+            CASCFile.Files.Clear();
         }
 
         public override void Dump()

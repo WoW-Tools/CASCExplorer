@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     struct D3RootEntry
     {
@@ -125,7 +125,7 @@ namespace CASCExplorer
             D3RootData.Clear();
             tocParser = null;
             pkgParser = null;
-            CASCFile.FileNames.Clear();
+            CASCFile.Files.Clear();
         }
 
         public override void Dump()
@@ -153,15 +153,7 @@ namespace CASCExplorer
 
         public override IEnumerable<RootEntry> GetEntries(ulong hash)
         {
-            var rootInfos = GetAllEntries(hash);
-
-            if (!rootInfos.Any())
-                yield break;
-
-            var rootInfosLocale = rootInfos.Where(re => (re.LocaleFlags & Locale) != 0);
-
-            foreach (var entry in rootInfosLocale)
-                yield return entry;
+            return GetEntriesForSelectedLocale(hash);
         }
 
         private void AddFile(string pkg, D3RootEntry e)
@@ -207,7 +199,7 @@ namespace CASCExplorer
                 entry.LocaleFlags = LocaleFlags.All;
 
             ulong fileHash = Hasher.ComputeHash(name);
-            CASCFile.FileNames[fileHash] = name;
+            CASCFile.Files[fileHash] = new CASCFile(fileHash, name);
 
             RootData.Add(fileHash, entry);
         }
@@ -249,7 +241,7 @@ namespace CASCExplorer
                 if (!rootInfosLocale.Any())
                     continue;
 
-                CreateSubTree(root, rootEntry.Key, CASCFile.FileNames[rootEntry.Key]);
+                CreateSubTree(root, rootEntry.Key, CASCFile.Files[rootEntry.Key].FullName);
                 CountSelect++;
             }
 

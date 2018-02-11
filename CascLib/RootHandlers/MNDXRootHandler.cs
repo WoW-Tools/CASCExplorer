@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     public struct MNDXHeader
     {
@@ -227,7 +227,8 @@ namespace CASCExplorer
             //    yield return rootEntry;
             //else
             //    yield break;
-            return GetAllEntries(hash);
+            //return GetAllEntries(hash);
+            return GetEntriesForSelectedLocale(hash);
         }
 
         private int FindMNDXPackage(string fileName)
@@ -370,7 +371,7 @@ namespace CASCExplorer
 
                 ulong fileHash = Hasher.ComputeHash(file);
 
-                CASCFile.FileNames[fileHash] = file;
+                CASCFile.Files[fileHash] = new CASCFile(fileHash, file);
 
                 RootEntry entry = new RootEntry();
 
@@ -403,7 +404,7 @@ namespace CASCExplorer
                 if ((entry.Value.LocaleFlags & Locale) == 0)
                     continue;
 
-                CreateSubTree(root, entry.Key, CASCFile.FileNames[entry.Key]);
+                CreateSubTree(root, entry.Key, CASCFile.Files[entry.Key].FullName);
                 CountSelect++;
             }
 
@@ -418,7 +419,7 @@ namespace CASCExplorer
             Packages.Clear();
             PackagesLocale.Clear();
             Root.Entries.Clear();
-            CASCFile.FileNames.Clear();
+            CASCFile.Files.Clear();
         }
 
         public override void Dump()

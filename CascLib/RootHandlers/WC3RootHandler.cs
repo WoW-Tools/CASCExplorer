@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
-namespace CASCExplorer
+namespace CASCLib
 {
-    public class S1RootHandler : RootHandlerBase
+    public class WC3RootHandler : RootHandlerBase
     {
         private Dictionary<ulong, RootEntry> RootData = new Dictionary<ulong, RootEntry>();
 
-        public S1RootHandler(BinaryReader stream, BackgroundWorkerEx worker)
+        public WC3RootHandler(BinaryReader stream, BackgroundWorkerEx worker)
         {
             worker?.ReportProgress(0, "Loading \"root\"...");
 
@@ -24,12 +25,12 @@ namespace CASCExplorer
 
                     LocaleFlags locale = LocaleFlags.All;
 
-                    if (tokens[0].IndexOf(':') != -1)
+                    if (tokens[0].IndexOf('-') == 4)
                     {
-                        string[] tokens2 = tokens[0].Split(':');
+                        string[] tokens2 = tokens[0].Split('-');
 
-                        file = tokens2[0];
-                        locale = (LocaleFlags)Enum.Parse(typeof(LocaleFlags), tokens2[1]);
+                        file = tokens2[1];
+                        locale = (LocaleFlags)Enum.Parse(typeof(LocaleFlags), tokens2[0]);
                     }
                     else
                     {
@@ -45,7 +46,7 @@ namespace CASCExplorer
                         MD5 = tokens[1].ToByteArray().ToMD5()
                     };
 
-                    CASCFile.FileNames[fileHash] = file;
+                    CASCFile.Files[fileHash] = new CASCFile(fileHash, file);
                 }
             }
 
@@ -66,7 +67,7 @@ namespace CASCExplorer
         // Returns only entries that match current locale and content flags
         public override IEnumerable<RootEntry> GetEntries(ulong hash)
         {
-            return GetAllEntries(hash);
+            return GetEntriesForSelectedLocale(hash);
         }
 
         public override void LoadListFile(string path, BackgroundWorkerEx worker = null)
@@ -85,7 +86,7 @@ namespace CASCExplorer
                 if ((entry.Value.LocaleFlags & Locale) == 0)
                     continue;
 
-                CreateSubTree(root, entry.Key, CASCFile.FileNames[entry.Key]);
+                CreateSubTree(root, entry.Key, CASCFile.Files[entry.Key].FullName);
                 CountSelect++;
             }
 
@@ -100,7 +101,7 @@ namespace CASCExplorer
         public override void Clear()
         {
             Root.Entries.Clear();
-            CASCFile.FileNames.Clear();
+            CASCFile.Files.Clear();
         }
 
         public override void Dump()

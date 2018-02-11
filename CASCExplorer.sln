@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CASCExplorer", "CASCExplorer\CASCExplorer.csproj", "{CB208F91-B1E8-4319-B4C0-2F4E15A4BFBC}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CascLib", "CascLib\CascLib.csproj", "{E08E1E48-6585-4137-8405-661C62C10713}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SereniaBLPLib", "SereniaBLPLib\SereniaBLPLib\SereniaBLPLib.csproj", "{4ED9F877-A9BB-470F-B35C-694147472080}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CascLibCore", "CascLibCore\CascLibCore.csproj", "{D6EE8D24-722F-488E-BD31-F01F765010B9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,8 +35,15 @@ Global
 		{4ED9F877-A9BB-470F-B35C-694147472080}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4ED9F877-A9BB-470F-B35C-694147472080}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4ED9F877-A9BB-470F-B35C-694147472080}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6EE8D24-722F-488E-BD31-F01F765010B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6EE8D24-722F-488E-BD31-F01F765010B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6EE8D24-722F-488E-BD31-F01F765010B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6EE8D24-722F-488E-BD31-F01F765010B9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {ACCA6FD1-0ACF-4D0D-A70A-DC4BC0AECA68}
 	EndGlobalSection
 EndGlobal

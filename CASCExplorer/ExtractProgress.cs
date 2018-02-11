@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CASCLib;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -61,6 +62,7 @@ namespace CASCExplorer
         private void button2_Click(object sender, EventArgs e)
         {
             button2.Enabled = false;
+            textBox1.ReadOnly = true;
             backgroundWorker1.RunWorkerAsync();
         }
 
@@ -95,6 +97,7 @@ namespace CASCExplorer
         private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             button2.Enabled = true;
+            textBox1.ReadOnly = false;
 
             if (e.Cancelled)
             {

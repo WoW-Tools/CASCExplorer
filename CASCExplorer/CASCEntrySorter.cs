@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using CASCLib;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 namespace CASCExplorer

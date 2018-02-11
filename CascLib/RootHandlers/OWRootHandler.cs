@@ -6,7 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace CASCExplorer
+namespace CASCLib
 {
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
     public struct APMEntry
@@ -115,7 +115,7 @@ namespace CASCExplorer
                         baseEntry = new RootEntry() { MD5 = apmMD5, LocaleFlags = LocaleFlags.All, ContentFlags = ContentFlags.None }
                     };
 
-                    CASCFile.FileNames[apmNameHash] = name;
+                    CASCFile.Files[apmNameHash] = new CASCFile(apmNameHash, name);
 
                     if (!casc.Encoding.GetEntry(apmMD5, out EncodingEntry apmEnc))
                         continue;
@@ -159,7 +159,7 @@ namespace CASCExplorer
         // Returns only entries that match current locale and content flags
         public override IEnumerable<RootEntry> GetEntries(ulong hash)
         {
-            return GetAllEntries(hash);
+            return GetEntriesForSelectedLocale(hash);
         }
 
         public bool GetEntry(ulong hash, out OWRootEntry entry)
@@ -204,7 +204,7 @@ namespace CASCExplorer
                         baseEntry = new RootEntry() { MD5 = pkgIndexMD5, LocaleFlags = LocaleFlags.All, ContentFlags = ContentFlags.None }
                     };
 
-                    CASCFile.FileNames[fileHash] = fakeName;
+                    CASCFile.Files[fileHash] = new CASCFile(fileHash, fakeName);
 
                     PackageIndex pkgIndex = apm.Indexes[i];
 
@@ -226,7 +226,7 @@ namespace CASCExplorer
                         pkgIndex = pkgIndex
                     };
 
-                    CASCFile.FileNames[fileHash] = fakeName;
+                    CASCFile.Files[fileHash] = new CASCFile(fileHash, fakeName);
 
                     PackageIndexRecord[] records = apm.Records[i];
 
@@ -251,7 +251,7 @@ namespace CASCExplorer
                             pkgIndexRec = records[k]
                         };
 
-                        CASCFile.FileNames[fileHash] = fakeName;
+                        CASCFile.Files[fileHash] = new CASCFile(fileHash, fakeName);
                     }
 
                     worker?.ReportProgress((int)(++pkgCount / pkgOnePct));
@@ -273,7 +273,7 @@ namespace CASCExplorer
                 if ((rootEntry.Value.baseEntry.LocaleFlags & Locale) == 0)
                     continue;
 
-                CreateSubTree(root, rootEntry.Key, CASCFile.FileNames[rootEntry.Key]);
+                CreateSubTree(root, rootEntry.Key, CASCFile.Files[rootEntry.Key].FullName);
                 CountSelect++;
             }
 
@@ -286,7 +286,7 @@ namespace CASCExplorer
         {
             _rootData.Clear();
             Root.Entries.Clear();
-            CASCFile.FileNames.Clear();
+            CASCFile.Files.Clear();
         }
 
         public override void Dump()

@@ -1,15 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
-namespace CASCExplorer
+namespace CASCLib
 {
-    public class HSRootHandler : RootHandlerBase
+    public class AgentRootHandler : RootHandlerBase
     {
-        public HSRootHandler(BinaryReader stream, BackgroundWorkerEx worker)
+        public AgentRootHandler(BinaryReader stream, BackgroundWorkerEx worker)
         {
             worker?.ReportProgress(0, "Loading \"root\"...");
 
-            // Hearthstone root file happened to be game executable! Just ignore it.
+            string hash = Encoding.ASCII.GetString(stream.ReadBytes((int)stream.BaseStream.Length)); // what is this for?
 
             worker?.ReportProgress(100);
         }
@@ -44,7 +45,7 @@ namespace CASCExplorer
             // Cleanup fake names for unknown files
             CountUnknown = 0;
 
-            Logger.WriteLine("HSRootHandler: {0} file names missing for locale {1}", CountUnknown, Locale);
+            Logger.WriteLine("AgentRootHandler: {0} file names missing for locale {1}", CountUnknown, Locale);
 
             return root;
         }
@@ -52,7 +53,7 @@ namespace CASCExplorer
         public override void Clear()
         {
             Root.Entries.Clear();
-            CASCFile.FileNames.Clear();
+            CASCFile.Files.Clear();
         }
 
         public override void Dump()
