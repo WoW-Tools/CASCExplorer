@@ -14,6 +14,46 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\CascLib\ArmadilloCrypt.cs" Link="ArmadilloCrypt.cs" />
+    <Compile Include="..\CascLib\BackgroundWorkerEx.cs" Link="BackgroundWorkerEx.cs" />
+    <Compile Include="..\CascLib\BLTEStream.cs" Link="BLTEStream.cs" />
+    <Compile Include="..\CascLib\CASCConfig.cs" Link="CASCConfig.cs" />
+    <Compile Include="..\CascLib\CASCEntry.cs" Link="CASCEntry.cs" />
+    <Compile Include="..\CascLib\CASCGame.cs" Link="CASCGame.cs" />
+    <Compile Include="..\CascLib\CASCHandler.cs" Link="CASCHandler.cs" />
+    <Compile Include="..\CascLib\CASCHandlerBase.cs" Link="CASCHandlerBase.cs" />
+    <Compile Include="..\CascLib\CASCHandlerLite.cs" Link="CASCHandlerLite.cs" />
+    <Compile Include="..\CascLib\CDNCache.cs" Link="CDNCache.cs" />
+    <Compile Include="..\CascLib\CDNIndexHandler.cs" Link="CDNIndexHandler.cs" />
+    <Compile Include="..\CascLib\DownloadHandler.cs" Link="DownloadHandler.cs" />
+    <Compile Include="..\CascLib\EncodingHandler.cs" Link="EncodingHandler.cs" />
+    <Compile Include="..\CascLib\Extensions.cs" Link="Extensions.cs" />
+    <Compile Include="..\CascLib\FastStruct.cs" Link="FastStruct.cs" />
+    <Compile Include="..\CascLib\InstallHandler.cs" Link="InstallHandler.cs" />
+    <Compile Include="..\CascLib\Jenkins96.cs" Link="Jenkins96.cs" />
+    <Compile Include="..\CascLib\Jenkins96Old.cs" Link="Jenkins96Old.cs" />
+    <Compile Include="..\CascLib\KeyService.cs" Link="KeyService.cs" />
+    <Compile Include="..\CascLib\LocalIndexHandler.cs" Link="LocalIndexHandler.cs" />
+    <Compile Include="..\CascLib\Logger.cs" Link="Logger.cs" />
+    <Compile Include="..\CascLib\MD5HashComparer.cs" Link="MD5HashComparer.cs" />
+    <Compile Include="..\CascLib\MultiDictionary.cs" Link="MultiDictionary.cs" />
+    <Compile Include="..\CascLib\PerfCounter.cs" Link="PerfCounter.cs" />
+    <Compile Include="..\CascLib\RootHandlerBase.cs" Link="RootHandlerBase.cs" />
+    <Compile Include="..\CascLib\RootHandlers\AgentRootHandler.cs" Link="RootHandlers\AgentRootHandler.cs" />
+    <Compile Include="..\CascLib\RootHandlers\D3RootHandler.cs" Link="RootHandlers\D3RootHandler.cs" />
+    <Compile Include="..\CascLib\RootHandlers\Destiny2RootHandler.cs" Link="RootHandlers\Destiny2RootHandler.cs" />
+    <Compile Include="..\CascLib\RootHandlers\HSRootHandler.cs" Link="RootHandlers\HSRootHandler.cs" />
+    <Compile Include="..\CascLib\RootHandlers\MNDXRootHandler.cs" Link="RootHandlers\MNDXRootHandler.cs" />
+    <Compile Include="..\CascLib\RootHandlers\OWRootHandler.cs" Link="RootHandlers\OWRootHandler.cs" />
+    <Compile Include="..\CascLib\RootHandlers\S1RootHandler.cs" Link="RootHandlers\S1RootHandler.cs" />
+    <Compile Include="..\CascLib\RootHandlers\WC3RootHandler.cs" Link="RootHandlers\WC3RootHandler.cs" />
+    <Compile Include="..\CascLib\RootHandlers\WowRootHandler.cs" Link="RootHandlers\WowRootHandler.cs" />
+    <Compile Include="..\CascLib\Salsa20.cs" Link="Salsa20.cs" />
+    <Compile Include="..\CascLib\SyncDownloader.cs" Link="SyncDownloader.cs" />
+    <Compile Include="..\CascLib\Wildcard.cs" Link="Wildcard.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
   </ItemGroup>
 

@@ -31,7 +31,7 @@ namespace CASCLib
 
             if (!config.OnlineMode)
             {
-                CDNIndexHandler.Cache.Enabled = false;
+                CDNCache.Enabled = false;
 
                 Logger.WriteLine("CASCHandlerBase: loading local indices...");
 
