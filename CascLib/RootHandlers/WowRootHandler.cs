@@ -255,6 +255,8 @@ namespace CASCLib
 
         public override void LoadListFile(string path, BackgroundWorkerEx worker = null)
         {
+            CASCFile.Files.Clear();
+
             if (LoadPreHashedListFile("listfile.bin", path, worker))
                 return;
 

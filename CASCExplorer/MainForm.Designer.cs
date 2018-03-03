@@ -78,6 +78,7 @@
             this.filterToolStripLabel = new System.Windows.Forms.ToolStripLabel();
             this.filterToolStripTextBox = new System.Windows.Forms.ToolStripTextBox();
             this.storageFolderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
+            this.openListFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -368,7 +369,8 @@
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.localeFlagsToolStripMenuItem,
             this.useLVToolStripMenuItem,
-            this.tsmShowPreview});
+            this.tsmShowPreview,
+            this.openListFileToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
@@ -535,6 +537,14 @@
             this.filterToolStripTextBox.Text = "*";
             this.filterToolStripTextBox.TextChanged += new System.EventHandler(this.filterToolStripTextBox_TextChanged);
             // 
+            // 
+            // openListFileToolStripMenuItem
+            // 
+            this.openListFileToolStripMenuItem.Name = "openListFileToolStripMenuItem";
+            this.openListFileToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.openListFileToolStripMenuItem.Text = "Open list file";
+            this.openListFileToolStripMenuItem.Click += new System.EventHandler(this.openListFileToolStripMenuItem_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -622,6 +632,7 @@
         private System.Windows.Forms.ColumnHeader columnHeader5;
         private System.Windows.Forms.ColumnHeader columnHeader4;
         private System.Windows.Forms.ToolStripMenuItem tsmShowPreview;
+        private System.Windows.Forms.ToolStripMenuItem openListFileToolStripMenuItem;
     }
 }
 
