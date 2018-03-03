@@ -55,7 +55,7 @@ namespace CASCExplorer
 
             using (var _ = new PerfCounter("LoadListFile()"))
             {
-                casc.Root.LoadListFile(Path.Combine(Application.StartupPath, "listfile.txt"), backgroundWorker1);
+                casc.Root.LoadListFile(Settings.Default.ListFilePath, backgroundWorker1);
             }
 
             var fldr = casc.Root.SetFlags(Settings.Default.LocaleFlags, Settings.Default.ContentFlags);

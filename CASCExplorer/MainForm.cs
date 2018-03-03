@@ -481,5 +481,19 @@ namespace CASCExplorer
             viewHelper.ViewPanel = tsmShowPreview.Checked ? splitContainer2.Panel2 : null;
             Settings.Default.PreviewVisible = tsmShowPreview.Checked;
         }
+
+        private void openListFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var dialog = new OpenFileDialog())
+            {
+                dialog.Filter = "Text files(*.txt)|*.txt";
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    Settings.Default.ListFilePath = dialog.FileName;
+                    Settings.Default.Save();
+                    viewHelper?.CASC?.Root?.LoadListFile(Settings.Default.ListFilePath);
+                }
+            }
+        }
     }
 }
