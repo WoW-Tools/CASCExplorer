@@ -9,7 +9,7 @@ using System.ComponentModel.Composition;
 namespace CASCExplorer.DefaultViews.Previews
 {
     [Export(typeof(IPreview))]
-    [ExportMetadata("Extensions", new string[] { ".txt", ".ini", ".wtf", ".lua", ".toc", ".xml", ".htm", ".html", ".lst", ".signed" })]
+    [ExportMetadata("Extensions", new string[] { ".txt", ".ini", ".wtf", ".lua", ".toc", ".xml", ".htm", ".html", ".lst", ".signed", ".anim", ".plist" })]
     public partial class TextView : UserControl, IPreview
     {
         byte[] m_bytes;
@@ -31,11 +31,35 @@ namespace CASCExplorer.DefaultViews.Previews
             }
         }
 
+        private void GetAnim()
+        {
+            richTextBox1.Clear();
+            if (m_bytes?.Length > 8)
+            {
+                var sig = BitConverter.ToUInt64(m_bytes, 0);
+                var text = Encoding.UTF8.GetString(m_bytes, 8, m_bytes.Length - 8);
+
+                richTextBox1.AppendText($"Signature: 0x{sig:X08}");
+                richTextBox1.AppendText(Environment.NewLine);
+                richTextBox1.AppendText(Environment.NewLine);
+                richTextBox1.AppendText(text);
+
+                richTextBox1.WordWrap = true;
+            }
+        }
+
         public Control Show(Stream stream, string fileName)
         {
             m_bytes = new byte[stream.Length];
             stream.Read(m_bytes, 0, (int)stream.Length);
-            GetText();
+            if (fileName.EndsWith(".anim"))
+            {
+                GetAnim();
+            }
+            else
+            {
+                GetText();
+            }
             return this;
         }
 

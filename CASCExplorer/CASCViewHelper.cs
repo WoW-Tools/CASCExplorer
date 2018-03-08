@@ -291,7 +291,7 @@ namespace CASCExplorer
             }
 
             scanForm.Reset();
-            scanForm.ShowDialog();
+            scanForm.Show();
         }
 
         public void UpdateListView(CASCFolder baseEntry, NoFlickerListView fileList, string filter)
