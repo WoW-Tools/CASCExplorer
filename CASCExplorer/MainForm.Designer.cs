@@ -436,6 +436,7 @@
             // 
             // findByFileDataIdToolStripMenuItem
             // 
+            this.findByFileDataIdToolStripMenuItem.Enabled = false;
             this.findByFileDataIdToolStripMenuItem.Name = "findByFileDataIdToolStripMenuItem";
             this.findByFileDataIdToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
             this.findByFileDataIdToolStripMenuItem.Text = "Find by FileDataId";
