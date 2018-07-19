@@ -118,7 +118,7 @@ namespace CASCLib
             if (gameType == CASCGameType.Hearthstone)
                 return "Hearthstone_Data";
 
-            if (gameType == CASCGameType.WoW || gameType == CASCGameType.D3)
+            if (gameType == CASCGameType.WoW || gameType == CASCGameType.D3 || gameType == CASCGameType.WC3)
                 return "Data";
 
             if (gameType == CASCGameType.Overwatch)
