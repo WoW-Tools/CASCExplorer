@@ -120,6 +120,7 @@ namespace CASCExplorer
             localeFlagsToolStripMenuItem.Enabled = CASCGame.SupportsLocaleSelection(gameType);
             useLVToolStripMenuItem.Enabled = isWoW;
             exportListfileToolStripMenuItem.Enabled = true;
+            findByFileDataIdToolStripMenuItem.Enabled = true;
 
             CASCFolder root = viewHelper.Root;
 
@@ -237,6 +238,7 @@ namespace CASCExplorer
         {
             extractToolStripMenuItem.Enabled = fileList.HasSelection;
             copyNameToolStripMenuItem.Enabled = (fileList.HasSelection && CASCFolder.GetFiles(viewHelper.DisplayedEntries, fileList.SelectedIndices.Cast<int>(), false).Count() > 0) || false;
+            getFileDataIDToolStripMenuItem.Enabled = copyNameToolStripMenuItem.Enabled;
             getSizeToolStripMenuItem.Enabled = fileList.HasSelection;
         }
 
@@ -345,6 +347,7 @@ namespace CASCExplorer
             localeFlagsToolStripMenuItem.Enabled = false;
             useLVToolStripMenuItem.Enabled = false;
             exportListfileToolStripMenuItem.Enabled = false;
+            findByFileDataIdToolStripMenuItem.Enabled = false;
             statusLabel.Text = "Ready.";
             statusProgress.Visible = false;
 
@@ -478,6 +481,33 @@ namespace CASCExplorer
         private void addFileDataIDToSoundFilesToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
         {
             viewHelper.AddFileDataIdToSoundFiles = addFileDataIDToSoundFilesToolStripMenuItem.Checked;
+        }
+
+        private void findByFileDataIdToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var form = new FindByFileDataIdForm();
+            form.handler = viewHelper.CASC;
+
+            form.ShowDialog();
+        }
+
+        private void getFileDataIdToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var root = viewHelper.CASC.Root as WowRootHandler;
+            if (viewHelper.CurrentFolder == null)
+                return;
+
+            if (!fileList.HasSelection)
+                return;
+
+            var files = CASCFolder.GetFiles(viewHelper.DisplayedEntries, fileList.SelectedIndices.Cast<int>(), false);
+            if (files.Count() == 1)
+                MessageBox.Show(root.GetFileDataIdByHash(files.First().Hash).ToString());
+            else
+            {
+                string temp = string.Join("\n", files.Select(_ => string.Format("{0} -> {1}", _.FullName, root.GetFileDataIdByHash(_.Hash))));
+                MessageBox.Show(temp);
+            }
         }
     }
 }

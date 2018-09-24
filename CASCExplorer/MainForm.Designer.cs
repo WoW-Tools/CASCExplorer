@@ -43,6 +43,7 @@
             this.extractToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.copyNameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.getSizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.getFileDataIDToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -65,6 +66,7 @@
             this.extractInstallFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.CDNBuildsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.extractCASCSystemFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.findByFileDataIdToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bruteforceNamesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportListfileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportFoldersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -190,31 +192,39 @@
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.extractToolStripMenuItem,
             this.copyNameToolStripMenuItem,
-            this.getSizeToolStripMenuItem});
+            this.getSizeToolStripMenuItem,
+            this.getFileDataIDToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(138, 70);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(153, 114);
             this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
             // 
             // extractToolStripMenuItem
             // 
             this.extractToolStripMenuItem.Name = "extractToolStripMenuItem";
-            this.extractToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
+            this.extractToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.extractToolStripMenuItem.Text = "Extract...";
             this.extractToolStripMenuItem.Click += new System.EventHandler(this.extractToolStripMenuItem_Click);
             // 
             // copyNameToolStripMenuItem
             // 
             this.copyNameToolStripMenuItem.Name = "copyNameToolStripMenuItem";
-            this.copyNameToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
+            this.copyNameToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.copyNameToolStripMenuItem.Text = "Copy Name";
             this.copyNameToolStripMenuItem.Click += new System.EventHandler(this.copyNameToolStripMenuItem_Click);
             // 
             // getSizeToolStripMenuItem
             // 
             this.getSizeToolStripMenuItem.Name = "getSizeToolStripMenuItem";
-            this.getSizeToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
+            this.getSizeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.getSizeToolStripMenuItem.Text = "Get Size";
             this.getSizeToolStripMenuItem.Click += new System.EventHandler(this.getSizeToolStripMenuItem_Click);
+            // 
+            // getFileDataIDToolStripMenuItem
+            // 
+            this.getFileDataIDToolStripMenuItem.Name = "getFileDataIDToolStripMenuItem";
+            this.getFileDataIDToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.getFileDataIDToolStripMenuItem.Text = "Get FileDataID";
+            this.getFileDataIDToolStripMenuItem.Click += new System.EventHandler(this.getFileDataIdToolStripMenuItem_Click);
             // 
             // toolStripContainer1
             // 
@@ -355,7 +365,7 @@
             // 
             this.localeFlagsToolStripMenuItem.Enabled = false;
             this.localeFlagsToolStripMenuItem.Name = "localeFlagsToolStripMenuItem";
-            this.localeFlagsToolStripMenuItem.Size = new System.Drawing.Size(108, 22);
+            this.localeFlagsToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
             this.localeFlagsToolStripMenuItem.Text = "Locale";
             this.localeFlagsToolStripMenuItem.DropDownItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.localeToolStripMenuItem_DropDownItemClicked);
             // 
@@ -363,7 +373,7 @@
             // 
             this.useLVToolStripMenuItem.Enabled = false;
             this.useLVToolStripMenuItem.Name = "useLVToolStripMenuItem";
-            this.useLVToolStripMenuItem.Size = new System.Drawing.Size(108, 22);
+            this.useLVToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
             this.useLVToolStripMenuItem.Text = "Use LV";
             this.useLVToolStripMenuItem.Click += new System.EventHandler(this.contentFlagsToolStripMenuItem_Click);
             // 
@@ -375,13 +385,14 @@
             this.extractInstallFilesToolStripMenuItem,
             this.CDNBuildsToolStripMenuItem,
             this.extractCASCSystemFilesToolStripMenuItem,
+            this.findByFileDataIdToolStripMenuItem,
             this.bruteforceNamesToolStripMenuItem,
             this.exportListfileToolStripMenuItem,
             this.exportFoldersToolStripMenuItem,
             this.analyzeSoundFilesToolStripMenuItem,
             this.addFileDataIDToSoundFilesToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
+            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
             // 
             // scanFilesToolStripMenuItem
@@ -422,6 +433,14 @@
             this.extractCASCSystemFilesToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
             this.extractCASCSystemFilesToolStripMenuItem.Text = "Extract CASC System Files";
             this.extractCASCSystemFilesToolStripMenuItem.Click += new System.EventHandler(this.extractCASCSystemFilesToolStripMenuItem_Click);
+            // 
+            // findByFileDataIdToolStripMenuItem
+            // 
+            this.findByFileDataIdToolStripMenuItem.Enabled = false;
+            this.findByFileDataIdToolStripMenuItem.Name = "findByFileDataIdToolStripMenuItem";
+            this.findByFileDataIdToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
+            this.findByFileDataIdToolStripMenuItem.Text = "Find by FileDataId";
+            this.findByFileDataIdToolStripMenuItem.Click += new System.EventHandler(this.findByFileDataIdToolStripMenuItem_Click);
             // 
             // bruteforceNamesToolStripMenuItem
             // 
@@ -611,6 +630,8 @@
         private System.Windows.Forms.ToolStripMenuItem exportFoldersToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem analyzeSoundFilesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addFileDataIDToSoundFilesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem findByFileDataIdToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem getFileDataIDToolStripMenuItem;
     }
 }
 
