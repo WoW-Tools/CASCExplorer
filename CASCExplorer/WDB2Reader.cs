@@ -9,11 +9,11 @@ namespace CASCLib
     public class DB2Row
     {
         private readonly byte[] m_data;
-        private readonly DB2Reader m_reader;
+        private readonly WDB2Reader m_reader;
 
         public byte[] Data => m_data;
 
-        public DB2Row(DB2Reader reader, byte[] data)
+        public DB2Row(WDB2Reader reader, byte[] data)
         {
             m_reader = reader;
             m_data = data;
@@ -43,7 +43,7 @@ namespace CASCLib
         }
     }
 
-    public class DB2Reader : IEnumerable<KeyValuePair<int, DB2Row>>
+    public class WDB2Reader : IEnumerable<KeyValuePair<int, DB2Row>>
     {
         private const int HeaderSize = 48;
         private const uint DB2FmtSig = 0x32424457;          // WDB2
@@ -60,9 +60,9 @@ namespace CASCLib
 
         readonly Dictionary<int, DB2Row> m_index = new Dictionary<int, DB2Row>();
 
-        public DB2Reader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
+        public WDB2Reader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
 
-        public DB2Reader(Stream stream)
+        public WDB2Reader(Stream stream)
         {
             using (var reader = new BinaryReader(stream, Encoding.UTF8))
             {

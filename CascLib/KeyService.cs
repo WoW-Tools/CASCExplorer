@@ -96,18 +96,26 @@ namespace CASCLib
             //[0x47011412CCAAB541] = "????????????????????????????????".ToByteArray(), // TactKeyId 111
             //[0x23B6F5764CE2DDD6] = "????????????????????????????????".ToByteArray(), // TactKeyId 112
             //[0x8E00C6F405873583] = "????????????????????????????????".ToByteArray(), // TactKeyId 113
-            //[0x78482170E4CFD4A6] = "????????????????????????????????".ToByteArray(), // TactKeyId 114
+            [0x78482170E4CFD4A6] = "768540C20A5B153583AD7F53130C58FE".ToByteArray(), // TactKeyId 114
             [0xB1EB52A64BFAF7BF] = "458133AA43949A141632C4F8596DE2B0".ToByteArray(), // TactKeyId 115
             [0xFC6F20EE98D208F6] = "57790E48D35500E70DF812594F507BE7".ToByteArray(), // TactKeyId 117
             [0x402CFABF2020D9B7] = "67197BCD9D0EF0C4085378FAA69A3264".ToByteArray(), // TactKeyId 118
             [0x6FA0420E902B4FBE] = "27B750184E5329C4E4455CBD3E1FD5AB".ToByteArray(), // TactKeyId 119
+            [0x1076074F2B350A2D] = "88BF0CD0D5BA159AE7CB916AFBE13865".ToByteArray(), // TactKeyId 121
+            [0xDDD295C82E60DB3C] = "3429CC5927D1629765974FD9AFAB7580".ToByteArray(), // TactKeyId 123
+            [0x83E96F07F259F799] = "91F7D0E7A02CDE0DE0BD367FABCB8A6E".ToByteArray(), // TactKeyId 124
+            [0xC1E5D7408A7D4484] = "A7D88E52749FA5459D644523F8359651".ToByteArray(), // TactKeyId 226
+            [0xE46276EB9E1A9854] = "CCCA36E302F9459B1D60526A31BE77C8".ToByteArray(), // TactKeyId 227
+            [0xD245B671DD78648C] = "19DCB4D45A658B54351DB7DDC81DE79E".ToByteArray(), // TactKeyId 228
+            [0x4C596E12D36DDFC3] = "B8731926389499CBD4ADBF5006CA0391".ToByteArray(), // TactKeyId 229
+            [0x0C9ABD5081C06411] = "25A77CD800197EE6A32DD63F04E115FA".ToByteArray(), // TactKeyId 230
+            [0x3C6243057F3D9B24] = "58AE3E064210E3EDF9C1259CDE914C5D".ToByteArray(), // TactKeyId 231
+            [0x7827FBE24427E27D] = "34A432042073CD0B51627068D2E0BD3E".ToByteArray(), // TactKeyId 232
             // BNA 1.5.0 Alpha
             [0x2C547F26A2613E01] = "37C50C102D4C9E3A5AC069F072B1417D".ToByteArray(),
         };
 
-        private static Salsa20 salsa = new Salsa20();
-
-        public static Salsa20 SalsaInstance => salsa;
+        public static Salsa20 SalsaInstance { get; } = new Salsa20();
 
         public static byte[] GetKey(ulong keyName)
         {

@@ -76,6 +76,9 @@ namespace CASCExplorer
             }
         }
 
+        public bool AnalyzeSoundFiles { get; set; } = true;
+        public bool AddFileDataIdToSoundFiles { get; set; } = true;
+
         public void ExtractFiles(NoFlickerListView filesList)
         {
             if (_currentFolder == null)
@@ -101,7 +104,7 @@ namespace CASCExplorer
 
             await Task.Run(() =>
             {
-                var installFiles = _casc.Install.GetEntries("Windows");
+                var installFiles = _casc.Install.GetEntriesByTag("Windows");
                 var build = _casc.Config.BuildName;
 
                 int numFiles = installFiles.Count();
@@ -130,13 +133,13 @@ namespace CASCExplorer
 
                 Dictionary<int, List<string>> idToName = new Dictionary<int, List<string>>();
 
-                if (_casc.Config.GameType == CASCGameType.WoW)
+                if (_casc.Config.GameType == CASCGameType.WoW && AnalyzeSoundFiles)
                 {
                     if (_casc.FileExists("DBFilesClient\\SoundEntries.db2"))
                     {
                         using (Stream stream = _casc.OpenFile("DBFilesClient\\SoundEntries.db2"))
                         {
-                            DB2Reader se = new DB2Reader(stream);
+                            WDB2Reader se = new WDB2Reader(stream);
 
                             foreach (var row in se)
                             {
@@ -165,20 +168,20 @@ namespace CASCExplorer
                         using (Stream skeStream = _casc.OpenFile("DBFilesClient\\SoundKitEntry.db2"))
                         using (Stream sknStream = _casc.OpenFile("DBFilesClient\\SoundKitName.db2"))
                         {
-                            var sk  = new WDC1Reader(skStream);
-                            var ske = new WDC1Reader(skeStream);
-                            var skn = new WDC1Reader(sknStream);
+                            WDC2Reader sk = new WDC2Reader(skStream);
+                            WDC2Reader ske = new WDC2Reader(skeStream);
+                            WDC2Reader skn = new WDC2Reader(sknStream);
 
                             Dictionary<int, List<int>> lookup = new Dictionary<int, List<int>>();
 
                             foreach (var row in ske)
                             {
-                                int soundKitId = row.Value.GetField<int>(3);
+                                int soundKitId = row.Value.GetField<int>(0);
 
                                 if (!lookup.ContainsKey(soundKitId))
                                     lookup[soundKitId] = new List<int>();
 
-                                lookup[soundKitId].Add(row.Value.GetField<int>(0));
+                                lookup[soundKitId].Add(row.Value.GetField<int>(1));
                             }
 
                             foreach (var row in sk)
@@ -188,7 +191,7 @@ namespace CASCExplorer
 
                                 int type = row.Value.GetField<byte>(6);
 
-                                if (!lookup.TryGetValue((int)row.Key, out List<int> ske_entries))
+                                if (!lookup.TryGetValue(row.Key, out List<int> ske_entries))
                                     continue;
 
                                 bool many = ske_entries.Count > 1;
@@ -200,7 +203,11 @@ namespace CASCExplorer
                                     if (!idToName.ContainsKey(fid))
                                         idToName[fid] = new List<string>();
 
-                                    idToName[fid].Add("unknown\\sound\\" + name + (many ? "_" + (i + 1).ToString("D2") : "") + "_" + fid + (type == 28 ? ".mp3" : ".ogg"));
+                                    if (AddFileDataIdToSoundFiles)
+                                        idToName[fid].Add("unknown\\sound\\" + name + (many ? "_" + (i + 1).ToString("D2") : "") + "_" + fid + (type == 28 ? ".mp3" : ".ogg"));
+                                    else
+                                        idToName[fid].Add("unknown\\sound\\" + name + (many ? "_" + (i + 1).ToString("D2") : "") + (type == 28 ? ".mp3" : ".ogg"));
+
                                     i++;
                                 }
                             }

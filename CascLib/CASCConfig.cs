@@ -161,8 +161,7 @@ namespace CASCLib
             config.GameType = CASCGame.DetectOnlineGame(product);
 
             string cdnKey = config._VersionsData[config._versionsIndex]["CDNConfig"].ToLower();
-            //string cdnKey = "d583ee15a02b81cc494aeeef8d195059";
-            //string cdnKey = "8c4ac7ab2f96ab75dab58448ffd07842";
+            //string cdnKey = "1964f5dfcb945c1b31acabedeaf13d09";
             using (Stream stream = CDNIndexHandler.OpenConfigFileDirect(config, cdnKey))
             {
                 config._CDNConfig = KeyValueConfig.ReadKeyValueConfig(stream);
@@ -202,8 +201,7 @@ namespace CASCLib
             }
 
             string buildKey = config._VersionsData[config._versionsIndex]["BuildConfig"].ToLower();
-            //string buildKey = "2e1db4da3a538cd52521b73040bdb162";
-            //string buildKey = "f639eab0a11d5b7a9099bc188badaa2e";
+            //string buildKey = "e8f3d86ab313c4bdf5cf4f5daea32477";
             using (Stream stream = CDNIndexHandler.OpenConfigFileDirect(config, buildKey))
             {
                 var cfg = KeyValueConfig.ReadKeyValueConfig(stream);
@@ -325,7 +323,7 @@ namespace CASCLib
 
                             for (int j = 0; j < hosts.Length; j++)
                             {
-                                if (hosts[j].Contains("edgecast"))
+                                if (hosts[j].Contains("edgecast") || hosts[j] == "cdn.blizzard.com")
                                     continue;
                                 return hosts[j];
                             }

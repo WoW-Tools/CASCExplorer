@@ -144,7 +144,7 @@ namespace CASCLib
                     return EncodingHandler.GetEntry(installInfos.First().MD5, out enc);
             }
 
-            enc = default(EncodingEntry);
+            enc = default;
             return false;
         }
 

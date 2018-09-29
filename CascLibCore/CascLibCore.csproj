@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Copyright>Copyright © TOM_RUS 2014-2018</Copyright>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -28,7 +29,6 @@
     <Compile Include="..\CascLib\DownloadHandler.cs" Link="DownloadHandler.cs" />
     <Compile Include="..\CascLib\EncodingHandler.cs" Link="EncodingHandler.cs" />
     <Compile Include="..\CascLib\Extensions.cs" Link="Extensions.cs" />
-    <Compile Include="..\CascLib\FastStruct.cs" Link="FastStruct.cs" />
     <Compile Include="..\CascLib\InstallHandler.cs" Link="InstallHandler.cs" />
     <Compile Include="..\CascLib\Jenkins96.cs" Link="Jenkins96.cs" />
     <Compile Include="..\CascLib\Jenkins96Old.cs" Link="Jenkins96Old.cs" />
@@ -49,12 +49,13 @@
     <Compile Include="..\CascLib\RootHandlers\WC3RootHandler.cs" Link="RootHandlers\WC3RootHandler.cs" />
     <Compile Include="..\CascLib\RootHandlers\WowRootHandler.cs" Link="RootHandlers\WowRootHandler.cs" />
     <Compile Include="..\CascLib\Salsa20.cs" Link="Salsa20.cs" />
-    <Compile Include="..\CascLib\SyncDownloader.cs" Link="SyncDownloader.cs" />
     <Compile Include="..\CascLib\Wildcard.cs" Link="Wildcard.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.1" />
   </ItemGroup>
 
 </Project>

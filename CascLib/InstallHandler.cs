@@ -81,10 +81,15 @@ namespace CASCLib
 
         public InstallEntry GetEntry(string name)
         {
-            return InstallData.Where(i => i.Name == name).FirstOrDefault();
+            return InstallData.Where(i => i.Name.ToLower() == name.ToLower()).FirstOrDefault();
         }
 
-        public IEnumerable<InstallEntry> GetEntries(string tag)
+        public IEnumerable<InstallEntry> GetEntriesByName(string name)
+        {
+            return InstallData.Where(i => i.Name.ToLower() == name.ToLower());
+        }
+
+        public IEnumerable<InstallEntry> GetEntriesByTag(string tag)
         {
             foreach (var entry in InstallData)
                 if (entry.Tags.Any(t => t.Name == tag))

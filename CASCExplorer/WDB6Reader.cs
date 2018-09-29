@@ -7,10 +7,12 @@ using System.Text;
 
 namespace CASCLib
 {
-    public class DB6Row
+    public class DB6Row : IDB2Row
     {
         private byte[] m_data;
-        private DB6Reader m_reader;
+        private WDB6Reader m_reader;
+
+        public int Id { get; set; }
 
         public byte[] Data
         {
@@ -18,7 +20,7 @@ namespace CASCLib
             set => m_data = value;
         }
 
-        public DB6Row(DB6Reader reader, byte[] data)
+        public DB6Row(WDB6Reader reader, byte[] data)
         {
             m_reader = reader;
             m_data = data;
@@ -26,7 +28,7 @@ namespace CASCLib
 
         public T GetField<T>(int field, int arrayIndex = 0)
         {
-            DB2Meta meta = m_reader.Meta[field];
+            FieldMetaData meta = m_reader.Meta[field];
 
             if (meta.Bits != 0x00 && meta.Bits != 0x08 && meta.Bits != 0x10 && meta.Bits != 0x18 && meta.Bits != -32)
                 throw new Exception("Unknown meta.Flags");
@@ -84,10 +86,8 @@ namespace CASCLib
                         throw new Exception("TypeCode.String Unknown meta.Bits");
                     byte[] b5 = new byte[4];
                     Array.Copy(m_data, meta.Offset + bytesCount * arrayIndex, b5, 0, bytesCount);
-                    int start = BitConverter.ToInt32(b5, 0), len = 0;
-                    while (m_reader.StringTable[start + len] != 0)
-                        len++;
-                    value = Encoding.UTF8.GetString(m_reader.StringTable, start, len);
+                    int start = BitConverter.ToInt32(b5, 0);
+                    value = m_reader.StringTable[start];
                     break;
                 case TypeCode.Single:
                     if (meta.Bits != 0x00)
@@ -100,31 +100,21 @@ namespace CASCLib
 
             return (T)value;
         }
+
+        public IDB2Row Clone()
+        {
+            return (IDB2Row)MemberwiseClone();
+        }
     }
 
-    public class DB6Reader : IEnumerable<KeyValuePair<int, DB6Row>>
+    public class WDB6Reader : DB2Reader
     {
         private const int HeaderSize = 56;
         private const uint DB6FmtSig = 0x36424457;          // WDB6
 
-        public int RecordsCount { get; private set; }
-        public int FieldsCount { get; private set; }
-        public int RecordSize { get; private set; }
-        public int StringTableSize { get; private set; }
-        public int MinIndex { get; private set; }
-        public int MaxIndex { get; private set; }
+        public WDB6Reader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
 
-        private readonly byte[] m_stringTable;
-        private readonly DB2Meta[] m_meta;
-
-        public byte[] StringTable => m_stringTable;
-        public DB2Meta[] Meta => m_meta;
-
-        private Dictionary<int, DB6Row> m_index = new Dictionary<int, DB6Row>();
-
-        public DB6Reader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
-
-        public DB6Reader(Stream stream)
+        public WDB6Reader(Stream stream)
         {
             using (var reader = new BinaryReader(stream, Encoding.UTF8))
             {
@@ -160,11 +150,11 @@ namespace CASCLib
                 bool isSparse = (flags & 0x1) != 0;
                 bool hasIndex = (flags & 0x4) != 0;
 
-                m_meta = new DB2Meta[FieldsCount];
+                m_meta = new FieldMetaData[FieldsCount];
 
                 for (int i = 0; i < m_meta.Length; i++)
                 {
-                    m_meta[i] = new DB2Meta()
+                    m_meta[i] = new FieldMetaData()
                     {
                         Bits = reader.ReadInt16(),
                         Offset = reader.ReadInt16()
@@ -178,7 +168,16 @@ namespace CASCLib
                     m_rows[i] = new DB6Row(this, reader.ReadBytes(RecordSize));
                 }
 
-                m_stringTable = reader.ReadBytes(StringTableSize);
+                m_stringsTable = new Dictionary<long, string>();
+
+                for (int i = 0; i < StringTableSize;)
+                {
+                    long oldPos = reader.BaseStream.Position;
+
+                    m_stringsTable[i] = reader.ReadCString();
+
+                    i += (int)(reader.BaseStream.Position - oldPos);
+                }
 
                 if (isSparse)
                 {
@@ -191,7 +190,9 @@ namespace CASCLib
                     for (int i = 0; i < RecordsCount; i++)
                     {
                         int id = reader.ReadInt32();
-                        m_index[id] = m_rows[i];
+                        var row = m_rows[i];
+                        row.Id = id;
+                        _Records[id] = row;
                     }
                 }
                 else
@@ -199,7 +200,9 @@ namespace CASCLib
                     for (int i = 0; i < RecordsCount; i++)
                     {
                         int id = m_rows[i].Data.Skip(m_meta[idIndex].Offset).Take((32 - m_meta[idIndex].Bits) >> 3).Select((b, k) => b << k * 8).Sum();
-                        m_index[id] = m_rows[i];
+                        var row = m_rows[i];
+                        row.Id = id;
+                        _Records[id] = row;
                     }
                 }
 
@@ -212,7 +215,7 @@ namespace CASCLib
                         int newId = reader.ReadInt32();
                         int oldId = reader.ReadInt32();
 
-                        m_index[newId] = m_index[oldId];
+                        _Records[newId] = _Records[oldId];
                     }
                 }
 
@@ -237,7 +240,7 @@ namespace CASCLib
                         byte type = reader.ReadByte();
 
                         if (i >= FieldsCount)
-                            m_meta[i] = new DB2Meta() { Bits = typeToBits[type], Offset = (short)(m_meta[i - 1].Offset + ((32 - m_meta[i - 1].Bits) >> 3)) };
+                            m_meta[i] = new FieldMetaData() { Bits = typeToBits[type], Offset = (short)(m_meta[i - 1].Offset + ((32 - m_meta[i - 1].Bits) >> 3)) };
 
                         fieldData[i] = new Dictionary<int, byte[]>();
 
@@ -269,7 +272,7 @@ namespace CASCLib
                         }
                     }
 
-                    var keys = m_index.Keys.ToArray();
+                    var keys = _Records.Keys.ToArray();
                     foreach (var row in keys)
                     {
                         for (int i = 0; i < fieldData.Length; i++)
@@ -279,8 +282,8 @@ namespace CASCLib
                             if (col.Count == 0)
                                 continue;
 
-                            var rowRef = m_index[row];
-                            byte[] rowData = m_index[row].Data;
+                            DB6Row rowRef = (DB6Row)_Records[row];
+                            byte[] rowData = rowRef.Data;
 
                             byte[] data = col.ContainsKey(row) ? col[row] : new byte[col.First().Value.Length];
 
@@ -294,29 +297,6 @@ namespace CASCLib
                     FieldsCount = totalFieldsCount;
                 }
             }
-        }
-
-        public bool HasRow(int id)
-        {
-            return m_index.ContainsKey(id);
-        }
-
-        public DB6Row GetRow(int id)
-        {
-            if (!m_index.ContainsKey(id))
-                return null;
-
-            return m_index[id];
-        }
-
-        public IEnumerator<KeyValuePair<int, DB6Row>> GetEnumerator()
-        {
-            return m_index.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return m_index.GetEnumerator();
         }
     }
 }

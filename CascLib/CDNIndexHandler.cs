@@ -21,8 +21,8 @@ namespace CASCLib
 
         private CASCConfig config;
         private BackgroundWorkerEx worker;
-        private SyncDownloader downloader;
-        public static readonly CDNCache Cache = new CDNCache("cache");
+
+        public static readonly CDNCache Cache = new CDNCache();
 
         public int Count => CDNIndexData.Count;
 
@@ -30,7 +30,6 @@ namespace CASCLib
         {
             config = cascConfig;
             this.worker = worker;
-            downloader = new SyncDownloader(worker);
         }
 
         public static CDNIndexHandler Initialize(CASCConfig config, BackgroundWorkerEx worker)
@@ -101,7 +100,7 @@ namespace CASCLib
                 }
                 else
                 {
-                    using (var fs = downloader.OpenFile(url))
+                    using (var fs = OpenFile(url))
                         ParseIndex(fs, i);
                 }
             }
@@ -169,9 +168,10 @@ namespace CASCLib
             //req.Headers[HttpRequestHeader.Range] = string.Format("bytes={0}-{1}", entry.Offset, entry.Offset + entry.Size - 1);
             req.AddRange(entry.Offset, entry.Offset + entry.Size - 1);
             using (HttpWebResponse resp = (HttpWebResponse)req.GetResponseAsync().Result)
+            using (Stream respStream = resp.GetResponseStream())
             {
                 MemoryStream ms = new MemoryStream(entry.Size);
-                resp.GetResponseStream().CopyBytes(ms, entry.Size);
+                respStream.CopyBytes(ms, entry.Size);
                 ms.Position = 0;
                 return ms;
             }
@@ -189,9 +189,15 @@ namespace CASCLib
             Stream stream = Cache.OpenFile(file, url, false);
 
             if (stream != null)
-                return stream;
+            {
+                stream.Position = 0;
+                MemoryStream ms = new MemoryStream();
+                stream.CopyTo(ms);
+                ms.Position = 0;
+                return ms;
+            }
 
-            return downloader.OpenFile(url);
+            return OpenFile(url);
         }
 
         public static Stream OpenConfigFileDirect(CASCConfig cfg, string key)
@@ -221,9 +227,23 @@ namespace CASCLib
 
             HttpWebRequest req = WebRequest.CreateHttp(url);
             using (HttpWebResponse resp = (HttpWebResponse)req.GetResponseAsync().Result)
+            using (Stream respStream = resp.GetResponseStream())
             {
                 MemoryStream ms = new MemoryStream();
-                resp.GetResponseStream().CopyTo(ms);
+                respStream.CopyTo(ms);
+                ms.Position = 0;
+                return ms;
+            }
+        }
+
+        private Stream OpenFile(string url)
+        {
+            HttpWebRequest request = WebRequest.CreateHttp(url);
+            using (HttpWebResponse resp = (HttpWebResponse)request.GetResponseAsync().Result)
+            using (Stream stream = resp.GetResponseStream())
+            {
+                MemoryStream ms = new MemoryStream();
+                stream.CopyToStream(ms, resp.ContentLength, worker);
                 ms.Position = 0;
                 return ms;
             }
@@ -244,7 +264,6 @@ namespace CASCLib
 
             config = null;
             worker = null;
-            downloader = null;
         }
     }
 }
