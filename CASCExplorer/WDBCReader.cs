@@ -9,11 +9,11 @@ namespace CASCLib
     class DBCRow
     {
         private byte[] m_data;
-        private DBCReader m_reader;
+        private WDBCReader m_reader;
 
         public byte[] Data { get { return m_data; } }
 
-        public DBCRow(DBCReader reader, byte[] data)
+        public DBCRow(WDBCReader reader, byte[] data)
         {
             m_reader = reader;
             m_data = data;
@@ -43,7 +43,7 @@ namespace CASCLib
         }
     }
 
-    class DBCReader : IEnumerable<KeyValuePair<int, DBCRow>>
+    class WDBCReader : IEnumerable<KeyValuePair<int, DBCRow>>
     {
         private const uint HeaderSize = 20;
         private const uint DBCFmtSig = 0x43424457;          // WDBC
@@ -62,9 +62,9 @@ namespace CASCLib
 
         Dictionary<int, DBCRow> m_index = new Dictionary<int, DBCRow>();
 
-        public DBCReader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
+        public WDBCReader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
 
-        public DBCReader(Stream stream)
+        public WDBCReader(Stream stream)
         {
             using (var reader = new BinaryReader(stream, Encoding.UTF8))
             {

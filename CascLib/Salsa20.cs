@@ -127,15 +127,12 @@ namespace CASCLib
                 throw new CryptographicException("Invalid IV size; it must be 8 bytes.");
         }
 
-        private static Random rnd = new Random();
-
         // Returns a new byte array containing the specified number of random bytes.
         private static byte[] GetRandomBytes(int byteCount)
         {
             byte[] bytes = new byte[byteCount];
-            rnd.NextBytes(bytes);
-            //using (RandomNumberGenerator rng = new RNGCryptoServiceProvider())
-            //    rng.GetBytes(bytes);
+            using (RandomNumberGenerator rng = new RNGCryptoServiceProvider())
+                rng.GetBytes(bytes);
             return bytes;
         }
 

@@ -115,6 +115,8 @@ namespace CASCExplorer
             extractCASCSystemFilesToolStripMenuItem.Enabled = true;
             scanFilesToolStripMenuItem.Enabled = isWoW;
             analyseUnknownFilesToolStripMenuItem.Enabled = isWoW || gameType == CASCGameType.Overwatch;
+            addFileDataIDToSoundFilesToolStripMenuItem.Enabled = isWoW;
+            analyzeSoundFilesToolStripMenuItem.Enabled = isWoW;
             localeFlagsToolStripMenuItem.Enabled = CASCGame.SupportsLocaleSelection(gameType);
             useLVToolStripMenuItem.Enabled = isWoW;
             exportListfileToolStripMenuItem.Enabled = true;
@@ -466,6 +468,16 @@ namespace CASCExplorer
         private void exportFoldersToolStripMenuItem_Click(object sender, EventArgs e)
         {
             viewHelper.ExportFolders();
+        }
+
+        private void analyzeSoundFilesToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            viewHelper.AnalyzeSoundFiles = analyzeSoundFilesToolStripMenuItem.Checked;
+        }
+
+        private void addFileDataIDToSoundFilesToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            viewHelper.AddFileDataIdToSoundFiles = addFileDataIDToSoundFilesToolStripMenuItem.Checked;
         }
     }
 }

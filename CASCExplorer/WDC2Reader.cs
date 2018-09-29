@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace CASCLib
 {
-    public class WDC1Row : IDB2Row
+    public class WDC2Row : IDB2Row
     {
         private BitReader m_data;
         private DB2Reader m_reader;
         private int m_dataOffset;
+        private int m_recordsOffset;
 
         public int Id { get; set; }
 
@@ -20,10 +20,11 @@ namespace CASCLib
         private Dictionary<int, Value32>[] m_commonData;
         private ReferenceEntry? m_refData;
 
-        public WDC1Row(DB2Reader reader, BitReader data, int id, ReferenceEntry? refData)
+        public WDC2Row(DB2Reader reader, BitReader data, int recordsOffset, int id, ReferenceEntry? refData)
         {
             m_reader = reader;
             m_data = data;
+            m_recordsOffset = recordsOffset;
 
             m_dataOffset = m_data.Offset;
 
@@ -45,16 +46,16 @@ namespace CASCLib
             }
         }
 
-        private static Dictionary<Type, Func<int, BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, object>> simpleReaders = new Dictionary<Type, Func<int, BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, object>>
+        private static Dictionary<Type, Func<int, BitReader, int, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, object>> simpleReaders = new Dictionary<Type, Func<int, BitReader, int, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, object>>
         {
-            [typeof(float)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<float>(id, data, fieldMeta, columnMeta, palletData, commonData),
-            [typeof(int)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<int>(id, data, fieldMeta, columnMeta, palletData, commonData),
-            [typeof(uint)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<uint>(id, data, fieldMeta, columnMeta, palletData, commonData),
-            [typeof(short)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<short>(id, data, fieldMeta, columnMeta, palletData, commonData),
-            [typeof(ushort)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<ushort>(id, data, fieldMeta, columnMeta, palletData, commonData),
-            [typeof(sbyte)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<sbyte>(id, data, fieldMeta, columnMeta, palletData, commonData),
-            [typeof(byte)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<byte>(id, data, fieldMeta, columnMeta, palletData, commonData),
-            [typeof(string)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => { int strOfs = GetFieldValue<int>(id, data, fieldMeta, columnMeta, palletData, commonData); return stringTable[strOfs]; },
+            [typeof(float)] = (id, data, recordsOffset, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<float>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(int)] = (id, data, recordsOffset, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<int>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(uint)] = (id, data, recordsOffset, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<uint>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(short)] = (id, data, recordsOffset, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<short>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(ushort)] = (id, data, recordsOffset, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<ushort>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(sbyte)] = (id, data, recordsOffset, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<sbyte>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(byte)] = (id, data, recordsOffset, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<byte>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(string)] = (id, data, recordsOffset, fieldMeta, columnMeta, palletData, commonData, stringTable) => { var pos = recordsOffset + data.Offset + (data.Position >> 3); int strOfs = GetFieldValue<int>(id, data, fieldMeta, columnMeta, palletData, commonData); return stringTable[pos + strOfs]; },
         };
 
         private static Dictionary<Type, Func<BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, int, object>> arrayReaders = new Dictionary<Type, Func<BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, int, object>>
@@ -91,7 +92,7 @@ namespace CASCLib
             else
             {
                 if (simpleReaders.TryGetValue(typeof(T), out var reader))
-                    value = reader(Id, m_data, m_fieldMeta[fieldIndex], m_columnMeta[fieldIndex], m_palletData[fieldIndex], m_commonData[fieldIndex], m_reader.StringTable);
+                    value = reader(Id, m_data, m_recordsOffset, m_fieldMeta[fieldIndex], m_columnMeta[fieldIndex], m_palletData[fieldIndex], m_commonData[fieldIndex], m_reader.StringTable);
                 else
                     throw new Exception("Unhandled field type: " + typeof(T).Name);
             }
@@ -111,6 +112,8 @@ namespace CASCLib
                         return r.Read<T>(columnMeta.Immediate.BitWidth);
                 case CompressionType.Immediate:
                     return r.Read<T>(columnMeta.Immediate.BitWidth);
+                case CompressionType.SignedImmediate:
+                    return r.ReadSigned<T>(columnMeta.Immediate.BitWidth);
                 case CompressionType.Common:
                     if (commonData.TryGetValue(Id, out Value32 val))
                         return val.As<T>();
@@ -151,6 +154,13 @@ namespace CASCLib
                         arr2[i] = r.Read<T>(columnMeta.Immediate.BitWidth);
 
                     return arr2;
+                case CompressionType.SignedImmediate:
+                    T[] arr4 = new T[arraySize];
+
+                    for (int i = 0; i < arr4.Length; i++)
+                        arr4[i] = r.ReadSigned<T>(columnMeta.Immediate.BitWidth);
+
+                    return arr4;
                 case CompressionType.PalletArray:
                     int cardinality = columnMeta.Pallet.Cardinality;
 
@@ -175,95 +185,51 @@ namespace CASCLib
         }
     }
 
-    public class WDC1Reader : DB2Reader
+    public class WDC2Reader : DB2Reader
     {
-        private const int HeaderSize = 84;
-        private const uint WDC1FmtSig = 0x31434457; // WDC1
+        private const int HeaderSize = 72 + 1 * 36;
+        private const uint WDC2FmtSig = 0x32434457; // WDC2
 
-        public WDC1Reader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
+        public WDC2Reader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
 
-        public WDC1Reader(Stream stream)
+        public WDC2Reader(Stream stream)
         {
             using (var reader = new BinaryReader(stream, Encoding.UTF8))
             {
                 if (reader.BaseStream.Length < HeaderSize)
-                    throw new InvalidDataException(String.Format("WDC1 file is corrupted!"));
+                    throw new InvalidDataException(String.Format("WDC2 file is corrupted!"));
 
                 uint magic = reader.ReadUInt32();
 
-                if (magic != WDC1FmtSig)
-                    throw new InvalidDataException(String.Format("WDC1 file is corrupted!"));
+                if (magic != WDC2FmtSig)
+                    throw new InvalidDataException(String.Format("WDC2 file is corrupted!"));
 
                 RecordsCount = reader.ReadInt32();
                 FieldsCount = reader.ReadInt32();
                 RecordSize = reader.ReadInt32();
                 StringTableSize = reader.ReadInt32();
-
                 TableHash = reader.ReadUInt32();
                 LayoutHash = reader.ReadUInt32();
                 MinIndex = reader.ReadInt32();
                 MaxIndex = reader.ReadInt32();
                 int locale = reader.ReadInt32();
-                int copyTableSize = reader.ReadInt32();
                 int flags = reader.ReadUInt16();
                 IdFieldIndex = reader.ReadUInt16();
-
                 int totalFieldsCount = reader.ReadInt32();
                 int packedDataOffset = reader.ReadInt32(); // Offset within the field where packed data starts
                 int lookupColumnCount = reader.ReadInt32(); // count of lookup columns
-                int sparseTableOffset = reader.ReadInt32(); // absolute value, {uint offset, ushort size}[MaxId - MinId + 1]
-                int indexDataSize = reader.ReadInt32(); // int indexData[IndexDataSize / 4]
                 int columnMetaDataSize = reader.ReadInt32(); // 24 * NumFields bytes, describes column bit packing, {ushort recordOffset, ushort size, uint additionalDataSize, uint compressionType, uint packedDataOffset or commonvalue, uint cellSize, uint cardinality}[NumFields], sizeof(DBC2CommonValue) == 8
                 int commonDataSize = reader.ReadInt32();
                 int palletDataSize = reader.ReadInt32(); // in bytes, sizeof(DBC2PalletValue) == 4
-                int referenceDataSize = reader.ReadInt32(); // uint NumRecords, uint minId, uint maxId, {uint id, uint index}[NumRecords], questionable usefulness...
+                int sectionsCount = reader.ReadInt32();
+
+                if (sectionsCount > 1)
+                    throw new Exception("sectionsCount > 1");
+
+                SectionHeader[] sections = reader.ReadArray<SectionHeader>(sectionsCount);
 
                 // field meta data
                 m_meta = reader.ReadArray<FieldMetaData>(FieldsCount);
-
-                if ((flags & 0x1) == 0)
-                {
-                    // records data
-                    recordsData = reader.ReadBytes(RecordsCount * RecordSize);
-
-                    Array.Resize(ref recordsData, recordsData.Length + 8); // pad with extra zeros so we don't crash when reading
-
-                    // string data
-                    m_stringsTable = new Dictionary<long, string>();
-
-                    for (int i = 0; i < StringTableSize;)
-                    {
-                        long oldPos = reader.BaseStream.Position;
-
-                        m_stringsTable[i] = reader.ReadCString();
-
-                        i += (int)(reader.BaseStream.Position - oldPos);
-                    }
-                }
-                else
-                {
-                    // sparse data with inlined strings
-                    sparseData = reader.ReadBytes(sparseTableOffset - HeaderSize - Marshal.SizeOf<FieldMetaData>() * FieldsCount);
-
-                    if (reader.BaseStream.Position != sparseTableOffset)
-                        throw new Exception("r.BaseStream.Position != sparseTableOffset");
-
-                    sparseEntries = reader.ReadArray<SparseEntry>(MaxIndex - MinIndex + 1);
-
-                    if (sparseTableOffset != 0)
-                        throw new Exception("Sparse Table NYI!");
-                    else
-                        throw new Exception("Sparse Table with zero offset?");
-                }
-
-                // index data
-                m_indexData = reader.ReadArray<int>(indexDataSize / 4);
-
-                // duplicate rows data
-                Dictionary<int, int> copyData = new Dictionary<int, int>();
-
-                for (int i = 0; i < copyTableSize / 8; i++)
-                    copyData[reader.ReadInt32()] = reader.ReadInt32();
 
                 // column meta data
                 m_columnMeta = reader.ReadArray<ColumnMetaData>(FieldsCount);
@@ -294,44 +260,93 @@ namespace CASCLib
                     }
                 }
 
-                // reference data
-                ReferenceData refData = null;
-
-                if (referenceDataSize > 0)
+                for (int sectionIndex = 0; sectionIndex < sectionsCount; sectionIndex++)
                 {
-                    refData = new ReferenceData
+                    reader.BaseStream.Position = sections[sectionIndex].FileOffset;
+
+                    if ((flags & 0x1) == 0)
                     {
-                        NumRecords = reader.ReadInt32(),
-                        MinId = reader.ReadInt32(),
-                        MaxId = reader.ReadInt32()
-                    };
+                        // records data
+                        recordsData = reader.ReadBytes(sections[sectionIndex].NumRecords * RecordSize);
 
-                    refData.Entries = reader.ReadArray<ReferenceEntry>(refData.NumRecords);
-                }
+                        Array.Resize(ref recordsData, recordsData.Length + 8); // pad with extra zeros so we don't crash when reading
 
-                BitReader bitReader = new BitReader(recordsData);
+                        // string data
+                        m_stringsTable = new Dictionary<long, string>();
 
-                for (int i = 0; i < RecordsCount; ++i)
-                {
-                    bitReader.Position = 0;
-                    bitReader.Offset = i * RecordSize;
+                        for (int i = 0; i < sections[sectionIndex].StringTableSize;)
+                        {
+                            long oldPos = reader.BaseStream.Position;
 
-                    IDB2Row rec = new WDC1Row(this, bitReader, indexDataSize != 0 ? m_indexData[i] : -1, refData?.Entries[i]);
+                            m_stringsTable[oldPos] = reader.ReadCString();
 
-                    if (indexDataSize != 0)
-                        _Records.Add(m_indexData[i], rec);
+                            i += (int)(reader.BaseStream.Position - oldPos);
+                        }
+                    }
                     else
-                        _Records.Add(rec.Id, rec);
+                    {
+                        // sparse data with inlined strings
+                        sparseData = reader.ReadBytes(sections[sectionIndex].SparseTableOffset - sections[sectionIndex].FileOffset);
 
-                    if (i % 1000 == 0)
-                        Console.Write("\r{0} records read", i);
-                }
+                        if (reader.BaseStream.Position != sections[sectionIndex].SparseTableOffset)
+                            throw new Exception("reader.BaseStream.Position != sections[sectionIndex].SparseTableOffset");
 
-                foreach (var copyRow in copyData)
-                {
-                    IDB2Row rec = _Records[copyRow.Value].Clone();
-                    rec.Id = copyRow.Key;
-                    _Records.Add(copyRow.Key, rec);
+                        sparseEntries = reader.ReadArray<SparseEntry>(MaxIndex - MinIndex + 1);
+
+                        if (sections[sectionIndex].SparseTableOffset != 0)
+                            throw new Exception("Sparse Table NYI!");
+                        else
+                            throw new Exception("Sparse Table with zero offset?");
+                    }
+
+                    // index data
+                    m_indexData = reader.ReadArray<int>(sections[sectionIndex].IndexDataSize / 4);
+
+                    // duplicate rows data
+                    Dictionary<int, int> copyData = new Dictionary<int, int>();
+
+                    for (int i = 0; i < sections[sectionIndex].CopyTableSize / 8; i++)
+                        copyData[reader.ReadInt32()] = reader.ReadInt32();
+
+                    // reference data
+                    ReferenceData refData = null;
+
+                    if (sections[sectionIndex].ParentLookupDataSize > 0)
+                    {
+                        refData = new ReferenceData
+                        {
+                            NumRecords = reader.ReadInt32(),
+                            MinId = reader.ReadInt32(),
+                            MaxId = reader.ReadInt32()
+                        };
+
+                        refData.Entries = reader.ReadArray<ReferenceEntry>(refData.NumRecords);
+                    }
+
+                    BitReader bitReader = new BitReader(recordsData);
+
+                    for (int i = 0; i < RecordsCount; ++i)
+                    {
+                        bitReader.Position = 0;
+                        bitReader.Offset = i * RecordSize;
+
+                        IDB2Row rec = new WDC2Row(this, bitReader, sections[sectionIndex].FileOffset, sections[sectionIndex].IndexDataSize != 0 ? m_indexData[i] : -1, refData?.Entries[i]);
+
+                        if (sections[sectionIndex].IndexDataSize != 0)
+                            _Records.Add(m_indexData[i], rec);
+                        else
+                            _Records.Add(rec.Id, rec);
+
+                        if (i % 1000 == 0)
+                            Console.Write("\r{0} records read", i);
+                    }
+
+                    foreach (var copyRow in copyData)
+                    {
+                        IDB2Row rec = _Records[copyRow.Value].Clone();
+                        rec.Id = copyRow.Key;
+                        _Records.Add(copyRow.Key, rec);
+                    }
                 }
             }
         }

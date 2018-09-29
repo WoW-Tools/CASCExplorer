@@ -67,7 +67,13 @@ namespace CASCLib
             return true;
         }
 
-        public byte[] DecryptFile(string name, byte[] data)
+        public byte[] DecryptFile(string name)
+        {
+            using (FileStream fs = new FileStream(name, FileMode.Open))
+                return DecryptFile(name, fs);
+        }
+
+        public byte[] DecryptFile(string name, Stream stream)
         {
             string fileName = Path.GetFileNameWithoutExtension(name);
 
@@ -78,14 +84,32 @@ namespace CASCLib
 
             ICryptoTransform decryptor = KeyService.SalsaInstance.CreateDecryptor(_key, IV);
 
-            return decryptor.TransformFinalBlock(data, 0, data.Length);
+            using (CryptoStream cs = new CryptoStream(stream, decryptor, CryptoStreamMode.Read))
+            using (MemoryStream ms = new MemoryStream())
+            {
+                cs.CopyTo(ms);
+                return ms.ToArray();
+            }
         }
 
-        public byte[] DecryptFile(byte[] IV, byte[] data)
+        public Stream DecryptFileToStream(string name, Stream stream)
         {
+            string fileName = Path.GetFileNameWithoutExtension(name);
+
+            if (fileName.Length != 32)
+                throw new ArgumentException("name");
+
+            byte[] IV = fileName.Substring(16).ToByteArray();
+
             ICryptoTransform decryptor = KeyService.SalsaInstance.CreateDecryptor(_key, IV);
 
-            return decryptor.TransformFinalBlock(data, 0, data.Length);
+            using (CryptoStream cs = new CryptoStream(stream, decryptor, CryptoStreamMode.Read))
+            {
+                MemoryStream ms = new MemoryStream();
+                cs.CopyTo(ms);
+                ms.Position = 0;
+                return ms;
+            }
         }
     }
 }

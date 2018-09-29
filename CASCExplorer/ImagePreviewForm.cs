@@ -23,5 +23,11 @@ namespace CASCExplorer
         {
             ClientSize = _bitmap.Size;
         }
+
+        private void FormKeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+                Close();
+        }
     }
 }

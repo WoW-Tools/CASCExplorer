@@ -30,7 +30,7 @@ namespace CASCLib
         public byte[] Data;
     }
 
-    class BLTEStream : Stream
+    public class BLTEStream : Stream
     {
         private BinaryReader _reader;
         private MD5 _md5 = MD5.Create();
@@ -140,7 +140,7 @@ namespace CASCLib
                 {
                     block.CompSize = size - 8;
                     block.DecompSize = size - 8 - 1;
-                    block.Hash = default(MD5Hash);
+                    block.Hash = default;
                 }
 
                 _dataBlocks[i] = block;

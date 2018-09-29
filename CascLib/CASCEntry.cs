@@ -14,17 +14,15 @@ namespace CASCLib
 
     public class CASCFolder : ICASCEntry
     {
-        private string _name;
-
         public Dictionary<string, ICASCEntry> Entries { get; set; }
 
         public CASCFolder(string name)
         {
             Entries = new Dictionary<string, ICASCEntry>(StringComparer.OrdinalIgnoreCase);
-            _name = name;
+            Name = name;
         }
 
-        public string Name => _name;
+        public string Name { get; private set; }
 
         public ulong Hash => 0;
 
@@ -84,26 +82,19 @@ namespace CASCLib
 
     public class CASCFile : ICASCEntry
     {
-        private ulong hash;
-        private string fullname;
-
         public CASCFile(ulong hash, string fullname)
         {
-            this.hash = hash;
-            this.fullname = fullname;
+            Hash = hash;
+            FullName = fullname;
         }
 
-        public string Name => Path.GetFileName(fullname);
+        public string Name => Path.GetFileName(FullName);
 
-        public string FullName
-        {
-            get => fullname;
-            set => fullname = value;
-        }
+        public string FullName { get; set; }
 
-        public ulong Hash => hash;
+        public ulong Hash { get; private set; }
 
-        public int GetSize(CASCHandler casc) => casc.GetEncodingEntry(hash, out EncodingEntry enc) ? enc.Size : 0;
+        public long GetSize(CASCHandler casc) => casc.GetEncodingEntry(Hash, out EncodingEntry enc) ? enc.Size : 0;
 
         public int CompareTo(ICASCEntry other, int col, CASCHandler casc)
         {

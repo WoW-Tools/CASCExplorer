@@ -7,14 +7,16 @@ using System.Text;
 
 namespace CASCLib
 {
-    public class DB5Row
+    public class DB5Row : IDB2Row
     {
         private byte[] m_data;
-        private DB5Reader m_reader;
+        private WDB5Reader m_reader;
+
+        public int Id { get; set; }
 
         public byte[] Data => m_data;
 
-        public DB5Row(DB5Reader reader, byte[] data)
+        public DB5Row(WDB5Reader reader, byte[] data)
         {
             m_reader = reader;
             m_data = data;
@@ -22,7 +24,7 @@ namespace CASCLib
 
         public T GetField<T>(int field, int arrayIndex = 0)
         {
-            DB2Meta meta = m_reader.Meta[field];
+            FieldMetaData meta = m_reader.Meta[field];
 
             if (meta.Bits != 0x00 && meta.Bits != 0x08 && meta.Bits != 0x10 && meta.Bits != 0x18 && meta.Bits != -32)
                 throw new Exception("Unknown meta.Flags");
@@ -80,10 +82,8 @@ namespace CASCLib
                         throw new Exception("TypeCode.String Unknown meta.Bits");
                     byte[] b5 = new byte[4];
                     Array.Copy(m_data, meta.Offset + bytesCount * arrayIndex, b5, 0, bytesCount);
-                    int start = BitConverter.ToInt32(b5, 0), len = 0;
-                    while (m_reader.StringTable[start + len] != 0)
-                        len++;
-                    value = Encoding.UTF8.GetString(m_reader.StringTable, start, len);
+                    int start = BitConverter.ToInt32(b5, 0);
+                    value = m_reader.StringTable[start];
                     break;
                 case TypeCode.Single:
                     if (meta.Bits != 0x00)
@@ -96,37 +96,21 @@ namespace CASCLib
 
             return (T)value;
         }
+
+        public IDB2Row Clone()
+        {
+            return (IDB2Row)MemberwiseClone();
+        }
     }
 
-    public class DB2Meta
-    {
-        public short Bits { get; set; }
-        public short Offset { get; set; }
-    }
-
-    public class DB5Reader : IEnumerable<KeyValuePair<int, DB5Row>>
+    public class WDB5Reader : DB2Reader
     {
         private const int HeaderSize = 48;
         private const uint DB5FmtSig = 0x35424457;          // WDB5
 
-        public int RecordsCount { get; private set; }
-        public int FieldsCount { get; private set; }
-        public int RecordSize { get; private set; }
-        public int StringTableSize { get; private set; }
-        public int MinIndex { get; private set; }
-        public int MaxIndex { get; private set; }
+        public WDB5Reader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
 
-        private readonly byte[] m_stringTable;
-        private readonly DB2Meta[] m_meta;
-
-        public byte[] StringTable => m_stringTable;
-        public DB2Meta[] Meta => m_meta;
-
-        private Dictionary<int, DB5Row> m_index = new Dictionary<int, DB5Row>();
-
-        public DB5Reader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
-
-        public DB5Reader(Stream stream)
+        public WDB5Reader(Stream stream)
         {
             using (var reader = new BinaryReader(stream, Encoding.UTF8))
             {
@@ -159,11 +143,11 @@ namespace CASCLib
                 bool isSparse = (flags & 0x1) != 0;
                 bool hasIndex = (flags & 0x4) != 0;
 
-                m_meta = new DB2Meta[FieldsCount];
+                m_meta = new FieldMetaData[FieldsCount];
 
                 for (int i = 0; i < m_meta.Length; i++)
                 {
-                    m_meta[i] = new DB2Meta()
+                    m_meta[i] = new FieldMetaData()
                     {
                         Bits = reader.ReadInt16(),
                         Offset = reader.ReadInt16()
@@ -177,7 +161,16 @@ namespace CASCLib
                     m_rows[i] = new DB5Row(this, reader.ReadBytes(RecordSize));
                 }
 
-                m_stringTable = reader.ReadBytes(StringTableSize);
+                m_stringsTable = new Dictionary<long, string>();
+
+                for (int i = 0; i < StringTableSize;)
+                {
+                    long oldPos = reader.BaseStream.Position;
+
+                    m_stringsTable[i] = reader.ReadCString();
+
+                    i += (int)(reader.BaseStream.Position - oldPos);
+                }
 
                 if (isSparse)
                 {
@@ -190,7 +183,9 @@ namespace CASCLib
                     for (int i = 0; i < RecordsCount; i++)
                     {
                         int id = reader.ReadInt32();
-                        m_index[id] = m_rows[i];
+                        var row = m_rows[i];
+                        row.Id = id;
+                        _Records[id] = row;
                     }
                 }
                 else
@@ -198,7 +193,9 @@ namespace CASCLib
                     for (int i = 0; i < RecordsCount; i++)
                     {
                         int id = m_rows[i].Data.Skip(m_meta[idIndex].Offset).Take((32 - m_meta[idIndex].Bits) >> 3).Select((b, k) => b << k * 8).Sum();
-                        m_index[id] = m_rows[i];
+                        var row = m_rows[i];
+                        row.Id = id;
+                        _Records[id] = row;
                     }
                 }
 
@@ -211,33 +208,10 @@ namespace CASCLib
                         int newId = reader.ReadInt32();
                         int oldId = reader.ReadInt32();
 
-                        m_index[newId] = m_index[oldId];
+                        _Records[newId] = _Records[oldId];
                     }
                 }
             }
-        }
-
-        public bool HasRow(int id)
-        {
-            return m_index.ContainsKey(id);
-        }
-
-        public DB5Row GetRow(int id)
-        {
-            if (!m_index.ContainsKey(id))
-                return null;
-
-            return m_index[id];
-        }
-
-        public IEnumerator<KeyValuePair<int, DB5Row>> GetEnumerator()
-        {
-            return m_index.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return m_index.GetEnumerator();
         }
     }
 }

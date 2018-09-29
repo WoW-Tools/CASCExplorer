@@ -120,12 +120,12 @@ namespace CASCExplorer
                         state = 4;
                         sb.Append((char)b);
                     }
-                    else if (state == 4 && IsAlphaNum(b)) // extension
+                    else if (state == 4 && IsLetterOrNumber(b)) // extension
                     {
                         state = 5;
                         sb.Append((char)b);
                     }
-                    else if (state == 5 && IsAlphaNum(b)) // extension
+                    else if (state == 5 && IsLetterOrNumber(b)) // extension
                     {
                         sb.Append((char)b);
                     }
@@ -145,22 +145,33 @@ namespace CASCExplorer
             }
         }
 
-        // dash, space, underscore, point, slash, backslash, a-z, A-Z, 0-9
+        // space, '(', ')', dash, dot, slash, backslash, underscore, 0-9, A-Z, a-z
         private bool IsFileChar(int i)
         {
-            return ((i >= 46 && i <= 57) || (i >= 65 && i <= 90) || i == 92 || i == 95 || (i >= 97 && i <= 122));
+            return i == 46 || IsFileDelim(i) || IsSpecialChar(i) || IsLetterOrNumber(i);
         }
 
-        // dash, underscore, a-z, A-Z, 0-9
+        // space, '(', ')', dash, underscore, 0-9, A-Z, a-z
         private bool IsAlphaNum(int i)
         {
-            return (i == 45 || (i >= 48 && i <= 57) || (i >= 65 && i <= 90) || i == 95 || (i >= 97 && i <= 122));
+            return IsSpecialChar(i) || IsLetterOrNumber(i);
         }
 
         // slash or backslash
         private bool IsFileDelim(int i)
         {
-            return (i == 47 || i == 92);
+            return i == 47 || i == 92;
+        }
+
+        private bool IsSpecialChar(int i)
+        {
+            return i == 32 || i == 33 || i == 37 || i == 38 || i == 40 || i == 41 || i == 43 || i == 45 || i == 91 || i == 93 || i == 95;
+        }
+
+        // 0-9 || A-Z || a-z
+        private bool IsLetterOrNumber(int i)
+        {
+            return (i >= 48 && i <= 57) || (i >= 65 && i <= 90) || (i >= 97 && i <= 122);
         }
 
         public string GetFileExtension(CASCFile file)

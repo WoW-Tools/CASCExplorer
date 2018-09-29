@@ -42,6 +42,7 @@
             this.Text = "Preview";
             this.Load += new System.EventHandler(this.FormLoad);
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.FormPaint);
+            this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.FormKeyUp);
             this.ResumeLayout(false);
 
         }

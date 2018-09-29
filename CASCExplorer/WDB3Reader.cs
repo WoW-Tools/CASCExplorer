@@ -9,11 +9,11 @@ namespace CASCLib
     public class DB3Row
     {
         private byte[] m_data;
-        private DB3Reader m_reader;
+        private WDB3Reader m_reader;
 
         public byte[] Data { get { return m_data; } }
 
-        public DB3Row(DB3Reader reader, byte[] data)
+        public DB3Row(WDB3Reader reader, byte[] data)
         {
             m_reader = reader;
             m_data = data;
@@ -63,7 +63,7 @@ namespace CASCLib
         }
     }
 
-    public class DB3Reader : IEnumerable<KeyValuePair<int, DB3Row>>
+    public class WDB3Reader : IEnumerable<KeyValuePair<int, DB3Row>>
     {
         private readonly int HeaderSize;
         private const uint DB3FmtSig = 0x33424457;          // WDB3
@@ -80,9 +80,9 @@ namespace CASCLib
 
         private SortedDictionary<int, DB3Row> m_index = new SortedDictionary<int, DB3Row>();
 
-        public DB3Reader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
+        public WDB3Reader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
 
-        public DB3Reader(Stream stream)
+        public WDB3Reader(Stream stream)
         {
             using (var reader = new BinaryReader(stream, Encoding.UTF8))
             {
