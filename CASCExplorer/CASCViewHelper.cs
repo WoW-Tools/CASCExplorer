@@ -633,7 +633,7 @@ namespace CASCExplorer
                 foreach (var file in CASCFile.Files.OrderBy(f => f.Value.FullName, StringComparer.OrdinalIgnoreCase))
                 {
                     if (CASC.FileExists(file.Key) && (wowRoot == null || !wowRoot.IsUnknownFile(file.Key)))
-                        sw.WriteLine(file.Value);
+                        sw.WriteLine(file.Value.FullName);
                 }
 
                 //var wr = CASC.Root as WowRootHandler;
