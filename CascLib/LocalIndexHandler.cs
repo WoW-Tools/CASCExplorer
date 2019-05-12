@@ -119,7 +119,7 @@ namespace CASCLib
 
             for (int i = 0; i < 0x10; ++i)
             {
-                var files = Directory.EnumerateFiles(Path.Combine(config.BasePath, dataPath), string.Format("{0:X2}*.idx", i));
+                var files = Directory.EnumerateFiles(Path.Combine(config.BasePath, dataPath), string.Format("{0:x2}*.idx", i));
 
                 if (files.Count() > 0)
                     latestIdx.Add(files.Last());
