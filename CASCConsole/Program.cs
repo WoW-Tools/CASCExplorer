@@ -28,8 +28,9 @@ namespace CASCConsole
             var onlineOption = new Option<bool>(new[] { "-o", "--online" }, () => false, "Online extraction mode");
             var storagePathOption = new Option<string>(new[] { "-s", "--storage" }, () => "", "Local game storage folder");
             var overrideArchiveOption = new Option<bool>(new[] { "-a", "--archive" }, () => false, "Override archive");
+            var dumpVersionToFileOption = new Option<string>(new[] { "-v", "--dump-version-to-file" }, "Dump game version to file (example: version.txt)");
 
-            var allOptions = new Option[] { modeOption, modeParamOption, destOption, localeOption, productOption, onlineOption, storagePathOption, overrideArchiveOption };
+            var allOptions = new Option[] { modeOption, modeParamOption, destOption, localeOption, productOption, onlineOption, storagePathOption, overrideArchiveOption, dumpVersionToFileOption };
 
             var rootCommand = new RootCommand("CASCConsole");
             foreach (var option in allOptions)
@@ -38,12 +39,12 @@ namespace CASCConsole
             rootCommand.SetHandler((context) =>
             {
                 T get<T>(Option<T> option) => context.ParseResult.GetValueForOption(option);
-                Extract(get(modeOption), get(modeParamOption), get(destOption), get(localeOption), get(productOption), get(onlineOption), get(storagePathOption), get(overrideArchiveOption));
+                Extract(get(modeOption), get(modeParamOption), get(destOption), get(localeOption), get(productOption), get(onlineOption), get(storagePathOption), get(overrideArchiveOption), get(dumpVersionToFileOption));
             });
             rootCommand.Invoke(args);
         }
 
-        private static void Extract(ExtractMode mode, string modeParam, string destFolder, LocaleFlags locale, string product, bool online, string storagePath, bool overrideArchive)
+        private static void Extract(ExtractMode mode, string modeParam, string destFolder, LocaleFlags locale, string product, bool online, string storagePath, bool overrideArchive, string dumpVersionToFile)
         {
             DateTime startTime = DateTime.Now;
 
@@ -68,6 +69,12 @@ namespace CASCConsole
             cascHandler.Root.LoadListFile(Path.Combine(Environment.CurrentDirectory, "listfile.csv"), bgLoader);
             CASCFolder root = cascHandler.Root.SetFlags(locale, overrideArchive);
             cascHandler.Root.MergeInstall(cascHandler.Install);
+
+            if (!string.IsNullOrEmpty(dumpVersionToFile))
+            {
+                Console.WriteLine("Dumping version...");
+                File.WriteAllText(Path.Combine(destFolder, dumpVersionToFile), config.VersionName);
+            }
 
             Console.WriteLine("Loaded.");
 
