@@ -29,12 +29,17 @@ namespace CASCConsole
             var storagePathOption = new Option<string>(new[] { "-s", "--storage" }, () => "", "Local game storage folder");
             var overrideArchiveOption = new Option<bool>(new[] { "-a", "--archive" }, () => false, "Override archive");
 
-            var rootCommand = new RootCommand("CASCConsole") { modeOption, modeParamOption, destOption, localeOption, productOption, onlineOption, storagePathOption, overrideArchiveOption };
+            var allOptions = new Option[] { modeOption, modeParamOption, destOption, localeOption, productOption, onlineOption, storagePathOption, overrideArchiveOption };
 
-            rootCommand.SetHandler((ExtractMode mode, string modeParam, string destFolder, LocaleFlags locale, string product, bool online, string storagePath, bool overrideArchive) =>
+            var rootCommand = new RootCommand("CASCConsole");
+            foreach (var option in allOptions)
+                rootCommand.Add(option);
+
+            rootCommand.SetHandler((context) =>
             {
-                Extract(mode, modeParam, destFolder, locale, product, online, storagePath, overrideArchive);
-            }, modeOption, modeParamOption, destOption, localeOption, productOption, onlineOption, storagePathOption, overrideArchiveOption);
+                T get<T>(Option<T> option) => context.ParseResult.GetValueForOption(option);
+                Extract(get(modeOption), get(modeParamOption), get(destOption), get(localeOption), get(productOption), get(onlineOption), get(storagePathOption), get(overrideArchiveOption));
+            });
             rootCommand.Invoke(args);
         }
 
