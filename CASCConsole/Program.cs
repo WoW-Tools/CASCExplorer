@@ -20,6 +20,7 @@ namespace CASCConsole
     {
         public ExtractMode Mode { get; set; }
         public string ModeParam { get; set; }
+        public string Region { get; set; }
         public string DestFolder { get; set; }
         public LocaleFlags Locale { get; set; }
         public string Product { get; set; }
@@ -33,6 +34,7 @@ namespace CASCConsole
     {
         private readonly Option<ExtractMode> modeOption = new Option<ExtractMode>(new[] { "-m", "--mode" }, "Extraction mode") { IsRequired = true };
         private readonly Option<string> modeParamOption = new Option<string>(new[] { "-e", "--eparam" }, "Extraction mode parameter (example: *.* or listfile.csv)") { IsRequired = true };
+        private readonly Option<string> region = new Option<string>(new[] { "-r", "--region" }, () => "us", "Region");
         private readonly Option<string> destOption = new Option<string>(new[] { "-d", "--dest" }, "Destination folder path") { IsRequired = true };
         private readonly Option<LocaleFlags> localeOption = new Option<LocaleFlags>(new[] { "-l", "--locale" }, "Product locale") { IsRequired = true };
         private readonly Option<string> productOption = new Option<string>(new[] { "-p", "--product" }, "Product uid") { IsRequired = true };
@@ -45,7 +47,7 @@ namespace CASCConsole
 
         public CASCConsoleOptionsBinder()
         {
-            Root = new RootCommand("CASCConsole") { modeOption, modeParamOption, destOption, localeOption, productOption, onlineOption, storagePathOption, overrideArchiveOption, preferHighResTexturesOption };
+            Root = new RootCommand("CASCConsole") { modeOption, modeParamOption, region, destOption, localeOption, productOption, onlineOption, storagePathOption, overrideArchiveOption, preferHighResTexturesOption };
         }
 
         protected override CASCConsoleOptions GetBoundValue(BindingContext bindingContext)
@@ -56,6 +58,7 @@ namespace CASCConsole
             {
                 Mode = parseResult.GetValueForOption(modeOption),
                 ModeParam = parseResult.GetValueForOption(modeParamOption),
+                Region = parseResult.GetValueForOption(region),
                 DestFolder = parseResult.GetValueForOption(destOption),
                 Locale = parseResult.GetValueForOption(localeOption),
                 Product = parseResult.GetValueForOption(productOption),
@@ -198,12 +201,12 @@ namespace CASCConsole
             var commandsBinder = new CASCConsoleOptionsBinder();
 
             commandsBinder.Root.SetHandler((CASCConsoleOptions options) => {
-                Extract(options.Mode, options.ModeParam, options.DestFolder, options.Locale, options.Product, options.Online, options.StoragePath, options.OverrideArchive, options.PreferHighResTextures);
+                Extract(options.Mode, options.ModeParam, options.Region, options.DestFolder, options.Locale, options.Product, options.Online, options.StoragePath, options.OverrideArchive, options.PreferHighResTextures);
             }, commandsBinder);
             commandsBinder.Root.Invoke(args);
         }
 
-        private static void Extract(ExtractMode mode, string modeParam, string destFolder, LocaleFlags locale, string product, bool online, string storagePath, bool overrideArchive, bool preferHighResTextures)
+        private static void Extract(ExtractMode mode, string modeParam, string region, string destFolder, LocaleFlags locale, string product, bool online, string storagePath, bool overrideArchive, bool preferHighResTextures)
         {
             DateTime startTime = DateTime.Now;
 
@@ -212,6 +215,7 @@ namespace CASCConsole
             Console.WriteLine("Extract params:");
             Console.WriteLine("  Mode: {0}", mode);
             Console.WriteLine("  Mode Param: {0}", modeParam);
+            Console.WriteLine("  Region: {0}", region);
             Console.WriteLine("  Destination: {0}", destFolder);
             Console.WriteLine("  LocaleFlags: {0}", locale);
             Console.WriteLine("  Product: {0}", product);
@@ -228,7 +232,7 @@ namespace CASCConsole
             CASCConfig.LoadFlags |= LoadFlags.Install;
 
             CASCConfig config = online
-                ? CASCConfig.LoadOnlineStorageConfig(product, "us")
+                ? CASCConfig.LoadOnlineStorageConfig(product, region)
                 : CASCConfig.LoadLocalStorageConfig(storagePath, product);
 
             CASCHandler cascHandler = CASCHandler.OpenStorage(config, bgLoader);
