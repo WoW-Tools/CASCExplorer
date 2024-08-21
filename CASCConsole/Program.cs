@@ -13,7 +13,8 @@ namespace CASCConsole
     enum ExtractMode
     {
         Pattern,
-        Listfile
+        Listfile,
+        Installfile
     }
 
     class CASCConsoleOptions
@@ -28,13 +29,14 @@ namespace CASCConsole
         public string StoragePath { get; set; }
         public bool OverrideArchive { get; set; }
         public bool PreferHighResTextures { get; set; }
+        public string FileTag { get; set; }
     }
 
     internal class CASCConsoleOptionsBinder : BinderBase<CASCConsoleOptions>
     {
         private readonly Option<ExtractMode> modeOption = new Option<ExtractMode>(new[] { "-m", "--mode" }, "Extraction mode") { IsRequired = true };
         private readonly Option<string> modeParamOption = new Option<string>(new[] { "-e", "--eparam" }, "Extraction mode parameter (example: *.* or listfile.csv)") { IsRequired = true };
-        private readonly Option<string> region = new Option<string>(new[] { "-r", "--region" }, () => "us", "Region");
+        private readonly Option<string> region = new Option<string>(new[] { "-r", "--region" }, () => "us", "Region (example: us, eu, cn)");
         private readonly Option<string> destOption = new Option<string>(new[] { "-d", "--dest" }, "Destination folder path") { IsRequired = true };
         private readonly Option<LocaleFlags> localeOption = new Option<LocaleFlags>(new[] { "-l", "--locale" }, "Product locale") { IsRequired = true };
         private readonly Option<string> productOption = new Option<string>(new[] { "-p", "--product" }, "Product uid") { IsRequired = true };
@@ -42,12 +44,13 @@ namespace CASCConsole
         private readonly Option<string> storagePathOption = new Option<string>(new[] { "-s", "--storage" }, () => "", "Local game storage folder");
         private readonly Option<bool> overrideArchiveOption = new Option<bool>(new[] { "-a", "--archive" }, () => false, "Override archive");
         private readonly Option<bool> preferHighResTexturesOption = new Option<bool>(new[] { "-h", "--highres" }, () => false, "High Resolution Textures");
+        private readonly Option<string> fileTag = new Option<string>(new[] { "-t", "--tag" }, () => "US", "File tag (example: US, CN, Windows)");
 
         public RootCommand Root { get; }
 
         public CASCConsoleOptionsBinder()
         {
-            Root = new RootCommand("CASCConsole") { modeOption, modeParamOption, region, destOption, localeOption, productOption, onlineOption, storagePathOption, overrideArchiveOption, preferHighResTexturesOption };
+            Root = new RootCommand("CASCConsole") { modeOption, modeParamOption, region, destOption, localeOption, productOption, onlineOption, storagePathOption, overrideArchiveOption, preferHighResTexturesOption, fileTag };
         }
 
         protected override CASCConsoleOptions GetBoundValue(BindingContext bindingContext)
@@ -66,6 +69,7 @@ namespace CASCConsole
                 StoragePath = parseResult.GetValueForOption(storagePathOption),
                 OverrideArchive = parseResult.GetValueForOption(overrideArchiveOption),
                 PreferHighResTextures = parseResult.GetValueForOption(preferHighResTexturesOption),
+                FileTag = parseResult.GetValueForOption(fileTag),
             };
         }
     }
@@ -201,12 +205,12 @@ namespace CASCConsole
             var commandsBinder = new CASCConsoleOptionsBinder();
 
             commandsBinder.Root.SetHandler((CASCConsoleOptions options) => {
-                Extract(options.Mode, options.ModeParam, options.Region, options.DestFolder, options.Locale, options.Product, options.Online, options.StoragePath, options.OverrideArchive, options.PreferHighResTextures);
+                Extract(options.Mode, options.ModeParam, options.Region, options.DestFolder, options.Locale, options.Product, options.Online, options.StoragePath, options.OverrideArchive, options.PreferHighResTextures, options.FileTag);
             }, commandsBinder);
             commandsBinder.Root.Invoke(args);
         }
 
-        private static void Extract(ExtractMode mode, string modeParam, string region, string destFolder, LocaleFlags locale, string product, bool online, string storagePath, bool overrideArchive, bool preferHighResTextures)
+        private static void Extract(ExtractMode mode, string modeParam, string region, string destFolder, LocaleFlags locale, string product, bool online, string storagePath, bool overrideArchive, bool preferHighResTextures, string fileTag)
         {
             DateTime startTime = DateTime.Now;
 
@@ -223,6 +227,7 @@ namespace CASCConsole
             Console.WriteLine("  Storage Path: {0}", storagePath);
             Console.WriteLine("  OverrideArchive: {0}", overrideArchive);
             Console.WriteLine("  PreferHighResTextures: {0}", preferHighResTextures);
+            Console.WriteLine("  Tag: {0}", fileTag);
 
             Console.WriteLine("Loading...");
 
@@ -270,6 +275,24 @@ namespace CASCConsole
 
                     foreach (var file in names)
                         ExtractFile(cascHandler, 0, file, destFolder);
+                }
+            }
+            else if (mode == ExtractMode.Installfile)
+            {
+                Wildcard wildcard = new Wildcard(modeParam, true, RegexOptions.IgnoreCase);
+
+                var installFiles = cascHandler.Install.GetEntriesByTag(fileTag);
+                var build = cascHandler.Config.BuildName;
+                int numFiles = installFiles.Count();
+
+                foreach (var file in installFiles)
+                {
+                    if (cascHandler.Encoding.GetEntry(file.MD5, out EncodingEntry enc) && wildcard.IsMatch(file.Name))
+                    {
+                        cascHandler.SaveFileTo(enc.Keys[0], destFolder, file.Name);
+
+                        Console.WriteLine("Extracting '{0}'...", file.Name);
+                    }
                 }
             }
 
