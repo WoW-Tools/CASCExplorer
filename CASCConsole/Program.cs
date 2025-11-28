@@ -1,12 +1,13 @@
 ﻿using CASCLib;
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Binding;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace CASCConsole
 {
@@ -16,7 +17,7 @@ namespace CASCConsole
         Listfile
     }
 
-    class CASCConsoleOptions
+    class ExtractionOptions
     {
         public ExtractMode Mode { get; set; }
         public string ModeParam { get; set; }
@@ -27,9 +28,10 @@ namespace CASCConsole
         public string StoragePath { get; set; }
         public bool OverrideArchive { get; set; }
         public bool PreferHighResTextures { get; set; }
+        public int Threads { get; set; }
     }
 
-    internal class CASCConsoleOptionsBinder : BinderBase<CASCConsoleOptions>
+    internal class OptionsBinder : BinderBase<ExtractionOptions>
     {
         private readonly Option<ExtractMode> modeOption = new Option<ExtractMode>(new[] { "-m", "--mode" }, "Extraction mode") { IsRequired = true };
         private readonly Option<string> modeParamOption = new Option<string>(new[] { "-e", "--eparam" }, "Extraction mode parameter (example: *.* or listfile.csv)") { IsRequired = true };
@@ -40,19 +42,20 @@ namespace CASCConsole
         private readonly Option<string> storagePathOption = new Option<string>(new[] { "-s", "--storage" }, () => "", "Local game storage folder");
         private readonly Option<bool> overrideArchiveOption = new Option<bool>(new[] { "-a", "--archive" }, () => false, "Override archive");
         private readonly Option<bool> preferHighResTexturesOption = new Option<bool>(new[] { "-h", "--highres" }, () => false, "High Resolution Textures");
+        private readonly Option<int> threads = new Option<int>(new[] { "-t", "--threads" }, () => 1, "Number of threads to use for extraction (default 1)");
 
         public RootCommand Root { get; }
 
-        public CASCConsoleOptionsBinder()
+        public OptionsBinder()
         {
-            Root = new RootCommand("CASCConsole") { modeOption, modeParamOption, destOption, localeOption, productOption, onlineOption, storagePathOption, overrideArchiveOption, preferHighResTexturesOption };
+            Root = new RootCommand("CASCConsole") { modeOption, modeParamOption, destOption, localeOption, productOption, onlineOption, storagePathOption, overrideArchiveOption, preferHighResTexturesOption, threads };
         }
 
-        protected override CASCConsoleOptions GetBoundValue(BindingContext bindingContext)
+        protected override ExtractionOptions GetBoundValue(BindingContext bindingContext)
         {
             var parseResult = bindingContext.ParseResult;
 
-            return new CASCConsoleOptions
+            return new ExtractionOptions
             {
                 Mode = parseResult.GetValueForOption(modeOption),
                 ModeParam = parseResult.GetValueForOption(modeParamOption),
@@ -63,6 +66,7 @@ namespace CASCConsole
                 StoragePath = parseResult.GetValueForOption(storagePathOption),
                 OverrideArchive = parseResult.GetValueForOption(overrideArchiveOption),
                 PreferHighResTextures = parseResult.GetValueForOption(preferHighResTexturesOption),
+                Threads = parseResult.GetValueForOption(threads),
             };
         }
     }
@@ -195,79 +199,154 @@ namespace CASCConsole
             //    }
             //}
 
-            var commandsBinder = new CASCConsoleOptionsBinder();
-
-            commandsBinder.Root.SetHandler((CASCConsoleOptions options) => {
-                Extract(options.Mode, options.ModeParam, options.DestFolder, options.Locale, options.Product, options.Online, options.StoragePath, options.OverrideArchive, options.PreferHighResTextures);
-            }, commandsBinder);
+            var commandsBinder = new OptionsBinder();
+            commandsBinder.Root.SetHandler((ExtractionOptions options) => Extract(options), commandsBinder);
             commandsBinder.Root.Invoke(args);
         }
 
-        private static void Extract(ExtractMode mode, string modeParam, string destFolder, LocaleFlags locale, string product, bool online, string storagePath, bool overrideArchive, bool preferHighResTextures)
+        class ParallelExtractionTask : IDisposable
         {
-            DateTime startTime = DateTime.Now;
+            private readonly Thread thread;
+            private readonly ExtractionOptions config;
+            private CASCHandler handler;
+            private CASCFolder root;
+            private readonly int threadIndex;
+            private readonly int threadCount;
+            private event Action Finished;
 
-            Console.WriteLine($"Started at {startTime}");
 
-            Console.WriteLine("Extract params:");
-            Console.WriteLine("  Mode: {0}", mode);
-            Console.WriteLine("  Mode Param: {0}", modeParam);
-            Console.WriteLine("  Destination: {0}", destFolder);
-            Console.WriteLine("  LocaleFlags: {0}", locale);
-            Console.WriteLine("  Product: {0}", product);
-            Console.WriteLine("  Online: {0}", online);
-            Console.WriteLine("  Storage Path: {0}", storagePath);
-            Console.WriteLine("  OverrideArchive: {0}", overrideArchive);
-            Console.WriteLine("  PreferHighResTextures: {0}", preferHighResTextures);
-
-            Console.WriteLine("Loading...");
-
-            BackgroundWorkerEx bgLoader = new BackgroundWorkerEx();
-            bgLoader.ProgressChanged += BgLoader_ProgressChanged;
-
-            CASCConfig.LoadFlags |= LoadFlags.Install;
-
-            CASCConfig config = online
-                ? CASCConfig.LoadOnlineStorageConfig(product, "us")
-                : CASCConfig.LoadLocalStorageConfig(storagePath, product);
-
-            CASCHandler cascHandler = CASCHandler.OpenStorage(config, bgLoader);
-
-            cascHandler.Root.LoadListFile(Path.Combine(Environment.CurrentDirectory, "listfile.csv"), bgLoader);
-            CASCFolder root = cascHandler.Root.SetFlags(locale, overrideArchive, preferHighResTextures);
-            cascHandler.Root.MergeInstall(cascHandler.Install);
-
-            Console.WriteLine($"Loaded {config.Product} {config.VersionName}");
-
-            if (mode == ExtractMode.Pattern)
+            // Creates parallel tasks and starts them, returns master task that can be Start'ed
+            // on the main thread manually. Main task will wait dependents once finished.
+            public static ParallelExtractionTask RunParallelExtraction(ExtractionOptions config)
             {
-                Wildcard wildcard = new Wildcard(modeParam, true, RegexOptions.IgnoreCase);
-
-                foreach (var file in CASCFolder.GetFiles(root.Folders.Select(kv => kv.Value as ICASCEntry).Concat(root.Files.Select(kv => kv.Value))))
+                var master = new ParallelExtractionTask(null, config, 0, config.Threads);
+                for (int index = 1; index < config.Threads; index++)
                 {
-                    if (wildcard.IsMatch(file.FullName))
-                        ExtractFile(cascHandler, file.Hash, file.FullName, destFolder);
+                    _ = new ParallelExtractionTask(master, config, index, config.Threads);
                 }
+                return master;
             }
-            else if (mode == ExtractMode.Listfile)
+
+            public ParallelExtractionTask(ParallelExtractionTask master, ExtractionOptions config, int threadIndex, int threadCount)
             {
-                if (cascHandler.Root is WowRootHandler wowRoot)
+                this.config = config;
+                this.threadIndex = threadIndex;
+                this.threadCount = threadCount;
+
+                if (master != null)
                 {
-                    char[] splitChar = new char[] { ';' };
-
-                    var names = File.ReadLines(modeParam).Select(s => s.Split(splitChar, 2)).Select(s => new { id = int.Parse(s[0]), name = s[1] });
-
-                    foreach (var file in names)
-                        ExtractFile(cascHandler, wowRoot.GetHashByFileDataId(file.id), file.name, destFolder);
+                    handler = master.handler;
+                    root = master.root;
+                    thread = new Thread(this.Run);
+                    master.Finished += () => thread.Join();
+                    thread.Start();
                 }
                 else
                 {
-                    var names = File.ReadLines(modeParam);
-
-                    foreach (var file in names)
-                        ExtractFile(cascHandler, 0, file, destFolder);
+                    // Build hanlder only once for the master task, it takes a lot of memory
+                    BuildHandler();
                 }
             }
+
+            public void Start()
+            {
+                Run();
+                Finished?.Invoke();
+            }
+
+            private void BuildHandler()
+            {
+                var bgLoader = new BackgroundWorkerEx();
+                bgLoader.ProgressChanged += BgLoader_ProgressChanged;
+
+                CASCConfig.LoadFlags |= LoadFlags.Install;
+
+                CASCConfig cascConfig = config.Online
+                    ? CASCConfig.LoadOnlineStorageConfig(config.Product, "us")
+                    : CASCConfig.LoadLocalStorageConfig(config.StoragePath, config.Product);
+
+                handler = CASCHandler.OpenStorage(cascConfig, bgLoader);
+                handler.Root.LoadListFile(Path.Combine(Environment.CurrentDirectory, "listfile.csv"), bgLoader);
+                root = handler.Root.SetFlags(this.config.Locale, this.config.OverrideArchive, this.config.PreferHighResTextures);
+                handler.Root.MergeInstall(handler.Install);
+
+                Console.WriteLine($"Loaded {cascConfig.Product} {cascConfig.VersionName}");
+            }
+
+            private IEnumerable<CASCFile> GetFiles()
+            {
+
+                if (config.Mode == ExtractMode.Pattern)
+                {
+                    var entries = root
+                        .Folders
+                        .Select(kv => kv.Value as ICASCEntry)
+                        .Concat(root.Files.Select(kv => kv.Value));
+
+                    var wildcard = new Wildcard(config.ModeParam, true, RegexOptions.IgnoreCase);
+                    return CASCFolder.GetFiles(entries).Where(file => wildcard.IsMatch(file.FullName));
+                }
+
+                if (handler.Root is WowRootHandler wowRoot)
+                {
+                    var splitChar = new char[] { ';' };
+
+                    return File
+                        .ReadLines(config.ModeParam)
+                        .Select(s => s.Split(splitChar, 2))
+                        .Select(s => new CASCFile(ulong.Parse(s[0]), s[1]));
+                }
+
+
+                return File
+                    .ReadLines(config.ModeParam)
+                    .Select((name) => new CASCFile(0, name));
+
+            }
+
+            private void Run()
+            {
+                int index = -1;
+                foreach (var file in GetFiles())
+                {
+                    index++;
+                    if (index % threadCount != threadIndex) { continue; }
+
+                    ExtractFile(handler, file.Hash, file.FullName, config.DestFolder);
+                }
+            }
+
+            public void Dispose()
+            {
+                if (Finished == null) { return; }
+
+                foreach (var a in Finished.GetInvocationList())
+                {
+                    Finished -= a as Action;
+                }
+            }
+        }
+
+        private static void Extract(ExtractionOptions config)
+        {
+            DateTime startTime = DateTime.Now;
+            Console.WriteLine($"Started at {startTime}");
+
+            Console.WriteLine("Extract params:");
+            Console.WriteLine("  Mode: {0}", config.Mode);
+            Console.WriteLine("  Mode Param: {0}", config.ModeParam);
+            Console.WriteLine("  Destination: {0}", config.DestFolder);
+            Console.WriteLine("  LocaleFlags: {0}", config.Locale);
+            Console.WriteLine("  Product: {0}", config.Product);
+            Console.WriteLine("  Online: {0}", config.Online);
+            Console.WriteLine("  Storage Path: {0}", config.StoragePath);
+            Console.WriteLine("  OverrideArchive: {0}", config.OverrideArchive);
+            Console.WriteLine("  PreferHighResTextures: {0}", config.PreferHighResTextures);
+
+            Console.WriteLine("Loading...");
+
+            var task = ParallelExtractionTask.RunParallelExtraction(config);
+            task.Start();
 
             Console.WriteLine("Extracted.");
 
@@ -277,8 +356,6 @@ namespace CASCConsole
 
         private static void ExtractFile(CASCHandler cascHandler, ulong hash, string file, string dest)
         {
-            Console.Write("Extracting '{0}'...", file);
-
             try
             {
                 if (hash != 0)
@@ -286,11 +363,11 @@ namespace CASCConsole
                 else
                     cascHandler.SaveFileTo(file, dest);
 
-                Console.WriteLine(" Ok!");
+                Console.WriteLine($"Extracting '{file}'... Ok!");
             }
             catch (Exception exc)
             {
-                Console.WriteLine($" Error ({exc.Message})!");
+                Console.WriteLine($"Extracting '{file}'... Error ({exc.Message})!");
                 Logger.WriteLine(exc.Message);
             }
         }
