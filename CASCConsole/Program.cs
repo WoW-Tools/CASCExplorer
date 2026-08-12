@@ -13,7 +13,8 @@ namespace CASCConsole
     enum ExtractMode
     {
         Pattern,
-        Listfile
+        Listfile,
+        Regexp
     }
 
     class CASCConsoleOptions
@@ -32,7 +33,7 @@ namespace CASCConsole
     internal class CASCConsoleOptionsBinder : BinderBase<CASCConsoleOptions>
     {
         private readonly Option<ExtractMode> modeOption = new Option<ExtractMode>(new[] { "-m", "--mode" }, "Extraction mode") { IsRequired = true };
-        private readonly Option<string> modeParamOption = new Option<string>(new[] { "-e", "--eparam" }, "Extraction mode parameter (example: *.* or listfile.csv)") { IsRequired = true };
+        private readonly Option<string> modeParamOption = new Option<string>(new[] { "-e", "--eparam" }, "Extraction mode parameter (example: *.* for Pattern, listfile.csv for Listfile, world/maps/(azeroth|kalimdor)/.* for Regexp)") { IsRequired = true };
         private readonly Option<string> destOption = new Option<string>(new[] { "-d", "--dest" }, "Destination folder path") { IsRequired = true };
         private readonly Option<LocaleFlags> localeOption = new Option<LocaleFlags>(new[] { "-l", "--locale" }, "Product locale") { IsRequired = true };
         private readonly Option<string> productOption = new Option<string>(new[] { "-p", "--product" }, "Product uid") { IsRequired = true };
@@ -239,13 +240,15 @@ namespace CASCConsole
 
             Console.WriteLine($"Loaded {config.Product} {config.VersionName}");
 
-            if (mode == ExtractMode.Pattern)
+            if (mode == ExtractMode.Pattern || mode == ExtractMode.Regexp)
             {
-                Wildcard wildcard = new Wildcard(modeParam, true, RegexOptions.IgnoreCase);
+                Regex matcher = mode == ExtractMode.Regexp
+                    ? new Regex(modeParam, RegexOptions.IgnoreCase)
+                    : new Wildcard(modeParam, true, RegexOptions.IgnoreCase);
 
                 foreach (var file in CASCFolder.GetFiles(root.Folders.Select(kv => kv.Value as ICASCEntry).Concat(root.Files.Select(kv => kv.Value))))
                 {
-                    if (wildcard.IsMatch(file.FullName))
+                    if (matcher.IsMatch(file.FullName))
                         ExtractFile(cascHandler, file.Hash, file.FullName, destFolder);
                 }
             }
